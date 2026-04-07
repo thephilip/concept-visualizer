@@ -1,4 +1,4 @@
-# ocp-visual-concepts
+# Concept Visualizer
 
 Interactive, single-page HTML reference documents explaining OpenShift, ARO, ROSA, and OCP architectures for Red Hat TSEs.
 
