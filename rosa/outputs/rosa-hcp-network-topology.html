@@ -9,205 +9,21 @@
 <meta name="cv-tags" content="ROSA HCP,Networking,PrivateLink,AWS">
 <meta name="cv-accent" content="amber">
 <title>ROSA HCP Network Topology</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0f1117;
-    --bg2: #161b26;
-    --bg3: #1e2435;
-    --border: rgba(255,255,255,0.08);
-    --border-hi: rgba(255,255,255,0.18);
-    --text: #e2e8f0;
-    --text-muted: #8892a4;
-    --text-dim: #5a6478;
-    --blue: #3b82f6;
-    --blue-dim: rgba(59,130,246,0.15);
-    --blue-border: rgba(59,130,246,0.35);
-    --teal: #14b8a6;
-    --teal-dim: rgba(20,184,166,0.12);
-    --teal-border: rgba(20,184,166,0.3);
-    --amber: #f59e0b;
-    --amber-dim: rgba(245,158,11,0.12);
-    --amber-border: rgba(245,158,11,0.3);
-    --purple: #a78bfa;
-    --purple-dim: rgba(167,139,250,0.12);
-    --purple-border: rgba(167,139,250,0.3);
-    --red: #f87171;
-    --red-dim: rgba(248,113,113,0.1);
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.1);
-    --green-border: rgba(74,222,128,0.25);
-    --radius: 10px;
-    --radius-lg: 14px;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 32px 24px 48px;
-  }
-
-  .page-header { margin-bottom: 10px; }
-  .page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
-  .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-  .scope-banner {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber-border);
-    border-radius: var(--radius);
-    padding: 9px 14px;
-    font-size: 11px;
-    color: #fcd34d;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.6;
-  }
-  .scope-banner strong { color: #fde68a; }
-
-  .legend {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    margin-bottom: 20px; padding: 10px 14px;
-    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-  }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
-  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
-
-  .flow-wrap {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 20px 24px;
-    margin-bottom: 20px; overflow-x: auto;
-  }
-
-  .account-labels {
-    display: flex;
-    align-items: flex-end;
-    min-width: 740px;
-    margin-bottom: 14px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    gap: 0;
-  }
-  .account-label-rh {
-    width: 170px;
-    flex-shrink: 0;
-    text-align: center;
-    color: var(--amber);
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--amber-border);
-  }
-  .account-label-gap {
-    width: 12px;
-    flex-shrink: 0;
-    border-bottom: 1px dashed var(--border-hi);
-    align-self: flex-end;
-    height: 14px;
-  }
-  .account-label-customer {
-    flex: 1;
-    text-align: center;
-    color: var(--purple);
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--purple-border);
-  }
-
-  .flow { display: flex; align-items: center; gap: 0; min-width: 740px; position: relative; }
-
-  .node {
-    display: flex; flex-direction: column; align-items: center;
-    cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.15s;
-  }
-  .node:hover { transform: translateY(-2px); }
-  .node:hover .node-box { border-color: var(--border-hi); }
-
-  .node-box {
-    border-radius: var(--radius); border: 1px solid var(--border);
-    background: var(--bg3); padding: 10px 14px; text-align: center;
-    transition: border-color 0.2s, box-shadow 0.2s; min-width: 90px; position: relative;
-  }
-  .node-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: node-pulse 0.4s ease-out; }
-  .node-box.cloud { border-radius: 24px 24px 8px 8px; padding: 10px 16px; min-width: 110px; }
-
-  .node-label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
-  .node-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
-
-  .node-box.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   }
-  .node-box.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  }
-  .node-box.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
-  .node-box.c-green  { background: var(--green-dim);  border-color: var(--green-border);  }
-
-  .node-box.c-blue .node-label   { color: #93c5fd; }
-  .node-box.c-amber .node-label  { color: #fcd34d; }
-  .node-box.c-purple .node-label { color: #c4b5fd; }
-  .node-box.c-green .node-label  { color: var(--green); }
-
-  .arrow { display: flex; align-items: center; flex: 1; min-width: 28px; position: relative; }
-  .arrow-line { height: 1px; background: var(--border-hi); flex: 1; position: relative; }
-  .arrow-line::after {
-    content: ''; position: absolute; right: -1px; top: -4px;
-    border: 5px solid transparent; border-left-color: var(--border-hi);
-  }
-  .arrow-label {
-    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-    font-size: 10px; color: var(--text-dim); white-space: nowrap;
-    background: var(--bg2); padding: 0 4px;
-  }
-
-  .detail-panel {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 24px;
-    margin-bottom: 20px; min-height: 130px;
-  }
-  .detail-panel h3 {
-    font-size: 13px; font-weight: 600; color: var(--text);
-    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-  }
-  .detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
-  .detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
-  .detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
-  .detail-card-body code { color: var(--amber); font-size: 11px; background: rgba(245,158,11,0.08); padding: 1px 4px; border-radius: 3px; }
-  .detail-card-body .warn { color: var(--red); }
-  .detail-card-body .ok { color: var(--green); }
-
-  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 16px; letter-spacing: 0.03em; }
-
-  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
-  .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
-  .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
-  .ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
-  .ref-item:last-child { border-bottom: none; }
-  .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
-  .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
-  .ref-item-val code { color: var(--amber); font-size: 10px; }
-
-  .kcs-bar {
-    background: var(--blue-dim); border: 1px solid var(--blue-border);
-    border-radius: var(--radius); padding: 10px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 8px; font-size: 11px; color: #93c5fd;
-  }
-  .kcs-bar a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--blue-border); }
-  .kcs-bar a:hover { border-bottom-color: var(--blue); }
-  .kcs-links { display: flex; gap: 20px; flex-wrap: wrap; }
-
-  @keyframes node-pulse {
-    0%   { box-shadow: 0 0 0 0 var(--blue-dim); }
-    70%  { box-shadow: 0 0 0 8px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
-  }
-</style>
+<script>
+  /* Prevent flash of unstyled content — apply theme before CSS renders */
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
+
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
 
 <div class="page-header">
   <div class="page-title">ROSA HCP Network Topology</div>
@@ -369,7 +185,7 @@
 <script>
 const nodeData = {
   cp: {
-    color: '#f59e0b', title: 'HCP Control Plane — Red Hat AWS account',
+    dotClass: 'c-amber', title: 'HCP Control Plane — Red Hat AWS account',
     cards: [
       { title: 'What lives here', body: `API servers (2 per AZ), etcd (3-member quorum), OpenShift scheduler, OLM, cluster operators, and the HyperShift operator. All hosted entirely in Red Hat's AWS account. <span class="warn">Customer has no access to these nodes.</span>` },
       { title: 'High availability', body: `Control plane is deployed across 3 availability zones by default. Each AZ runs at least one API server instance. etcd requires quorum across all 3 members. Red Hat SRE is responsible for control plane health, patching, and upgrades.` },
@@ -378,7 +194,7 @@ const nodeData = {
     ]
   },
   privatelink: {
-    color: '#f59e0b', title: 'AWS PrivateLink',
+    dotClass: 'c-amber', title: 'AWS PrivateLink',
     cards: [
       { title: 'Mandatory — not optional', body: `<span class="warn">Every ROSA HCP cluster uses PrivateLink regardless of whether the API endpoint is public or private.</span> It is the only supported cross-account conduit between the Red Hat control plane and the customer's VPC. There is no VPN or peering alternative.` },
       { title: 'Interface endpoint (customer VPC)', body: `ROSA provisioning creates an interface VPC endpoint in the customer's VPC. The cluster API DNS name resolves to the private IP of this interface. All traffic to the API server traverses this endpoint and stays within the AWS network backbone.` },
@@ -387,7 +203,7 @@ const nodeData = {
     ]
   },
   workers: {
-    color: '#3b82f6', title: 'Worker Nodes — Customer AWS account',
+    dotClass: 'c-blue', title: 'Worker Nodes — Customer AWS account',
     cards: [
       { title: 'Placement', body: `All worker nodes run exclusively in private subnets in the customer's VPC. <span class="warn">No worker nodes are placed in public subnets.</span> Public subnets exist only to host NAT gateways and public-facing load balancers.` },
       { title: 'CNI — OVN-Kubernetes only', body: `<span class="ok">OVN-Kubernetes is the only supported CNI on ROSA HCP.</span> There is no plugin selection at installation time. The network type is enforced by the hosted control plane operator and cannot be changed post-install.` },
@@ -396,7 +212,7 @@ const nodeData = {
     ]
   },
   natgw: {
-    color: '#a78bfa', title: 'NAT Gateway / Egress',
+    dotClass: 'c-purple', title: 'NAT Gateway / Egress',
     cards: [
       { title: 'Standard egress path', body: `Worker nodes in private subnets route <code>0.0.0.0/0</code> to a NAT gateway in a public subnet. The NAT gateway uses an Elastic IP to reach the internet through the VPC's Internet Gateway. Each NAT gateway requires one Elastic IP.` },
       { title: 'High availability — gotcha', body: `<span class="warn">A single NAT gateway is a single point of egress failure.</span> For production multi-AZ clusters, deploy one NAT gateway per availability zone and configure each AZ's private subnet route table to use its local NAT gateway.` },
@@ -405,7 +221,7 @@ const nodeData = {
     ]
   },
   internet: {
-    color: '#4ade80', title: 'Internet',
+    dotClass: 'c-green', title: 'Internet',
     cards: [
       { title: 'Required outbound endpoints', body: `Worker nodes need outbound HTTPS to: <code>quay.io</code>, <code>registry.access.redhat.com</code> (image pulls), <code>api.openshift.com</code> / <code>console.redhat.com</code> (telemetry, Insights), and AWS service APIs (EC2, ELB, Route 53). Blocking these causes node bootstrapping or operator failures.` },
       { title: 'Public vs private API endpoint', body: `<strong>Public cluster:</strong> <code>api.&lt;cluster&gt;.openshiftapps.com</code> resolves to a public NLB — accessible from the internet with valid credentials. The actual request still flows through the PrivateLink interface endpoint internally.<br><strong>Private cluster:</strong> API DNS name is not publicly resolvable; reachable only from within the VPC or connected networks.` },
@@ -414,7 +230,7 @@ const nodeData = {
     ]
   },
   route53: {
-    color: '#f59e0b', title: 'Route 53 Hosted Zones',
+    dotClass: 'c-amber', title: 'Route 53 Hosted Zones',
     cards: [
       { title: 'Two private zones per cluster', body: `ROSA HCP creates two private hosted zones associated with the customer's VPC: <code>&lt;cluster-name&gt;.hypershift.local</code> (internal cluster services) and <code>rosa.&lt;domain-prefix&gt;.&lt;id&gt;.p3.openshiftapps.com</code> (API and app endpoints). Both are resolvable only from within the VPC.` },
       { title: 'Public zone — TLS cert validation only', body: `A public hosted zone is also created for the same cluster domain. <span class="warn">This is for TLS certificate DNS-01 validation only — not for providing public cluster access.</span> Records in the public zone point to private IPs. The public zone does not make the cluster reachable from the internet.` },
@@ -423,40 +239,7 @@ const nodeData = {
     ]
   }
 };
-
-let activeNode = null;
-
-function selectNode(id) {
-  if (activeNode) {
-    const prev = document.getElementById('box-' + activeNode);
-    if (prev) prev.classList.remove('active');
-  }
-  activeNode = id;
-  const box = document.getElementById('box-' + id);
-  if (box) box.classList.add('active');
-
-  const data = nodeData[id];
-  if (!data) return;
-
-  document.getElementById('detail-hint').style.display = 'none';
-  const content = document.getElementById('detail-content');
-  content.style.display = 'grid';
-
-  const panel = document.getElementById('detail-panel');
-  const existing = panel.querySelector('h3');
-  if (existing) existing.remove();
-
-  const h3 = document.createElement('h3');
-  h3.innerHTML = `<div class="dot" style="background:${data.color}"></div>${data.title}`;
-  panel.insertBefore(h3, content);
-
-  content.innerHTML = data.cards.map(c => `
-    <div class="detail-card">
-      <div class="detail-card-title">${c.title}</div>
-      <div class="detail-card-body">${c.body}</div>
-    </div>
-  `).join('');
-}
 </script>
+<script src="../../assets/theme.js"></script>
 </body>
 </html>

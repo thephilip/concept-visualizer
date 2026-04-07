@@ -13,6 +13,7 @@ Parse `$ARGUMENTS` and branch to the appropriate section:
 - If `$ARGUMENTS` is **empty** → ask the user what topic and platform they want to document, then follow **[Generate]**
 - If `$ARGUMENTS` begins with a topic description (not a sub-command keyword) → follow **[Generate]**
 - If `$ARGUMENTS` starts with `build` → follow **[Build]**
+- If `$ARGUMENTS` starts with `compile` → follow **[Compile]**
 - If `$ARGUMENTS` starts with `fact-check` → follow **[Fact-check]**
 
 ---
@@ -202,6 +203,65 @@ Replace `GITHUB_REPO` with the actual `owner/repo` path. If the git remote is al
 ### Step 4: Report
 
 List every file copied to `build/diagrams/`, confirm `build/index.html` was written, and show the card titles that were generated. If any `*/outputs/*.html` files were skipped due to missing `cv-*` tags, list them so the user can fix them.
+
+---
+
+## [Compile] — Produce self-contained, minified outputs for deployment
+
+Compile every source one-pager into a fully self-contained single HTML file in `build/diagrams/`, then regenerate `build/index.html`. This is the step that publishes to GitHub Pages.
+
+### Step 1: Read shared assets
+
+Read `assets/style.css` and `assets/theme.js` in full. These will be inlined into every output file.
+
+### Step 2: Discover source files
+
+Glob all `*/outputs/*.html`. For each file, read the `cv-*` meta tags. Skip any file missing required tags and report it to the user.
+
+### Step 3: Compile each file
+
+For each source file:
+
+1. Read the full HTML.
+2. Replace `<link rel="stylesheet" href="../../assets/style.css">` with `<style>[contents of style.css]</style>`.
+3. Replace `<script src="../../assets/theme.js"></script>` with `<script>[contents of theme.js]</script>`.
+4. Rewrite the nav bar back-link: replace `href="../index.html"` with `href="../index.html"` (already correct for `build/diagrams/` location — no change needed).
+5. Apply basic minification:
+   - Strip CSS comments (`/* ... */`)
+   - Strip HTML comments (`<!-- ... -->`) except `<!DOCTYPE`
+   - Collapse runs of whitespace in CSS/JS to single spaces (preserve content inside string literals)
+   - Do **not** mangle variable names or alter HTML content/attributes
+6. Write the result to `build/diagrams/[original-filename].html`.
+
+### Step 4: Regenerate `build/index.html`
+
+Follow the same index generation logic as **[Build]** — read `cv-*` tags from the compiled files, generate cards, write `build/index.html`. The index template is in the **[Build]** section.
+
+The index page should also include the theme toggle. Add this immediately after `<body>` in the index:
+
+```html
+<script>
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+```
+
+And add a theme toggle button in the site header:
+
+```html
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:48px;">
+  <div class="site-header" style="margin-bottom:0;">...</div>
+  <button id="theme-toggle" onclick="toggleTheme()" style="font-family:inherit;font-size:11px;color:var(--text-dim);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;">☾ Dark</button>
+</div>
+```
+
+Inline `assets/theme.js` at the end of `<body>` in the index as well (only the theme toggle portion — omit `selectNode` which is for one-pagers only).
+
+### Step 5: Report
+
+List every file written to `build/diagrams/`, confirm `build/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any skipped files.
 
 ---
 

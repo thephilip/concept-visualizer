@@ -49,10 +49,39 @@ Include this verbatim when prompting Claude. It defines the visual language, acc
 
 ### Visual design
 
-- Single `.html` file, no external dependencies, no frameworks
-- Dark background: `#0f1117` (body), `#161b26` (cards/panels), `#1e2435` (nested elements)
+Source files reference shared assets at `../../assets/style.css` and `../../assets/theme.js`. The compile step (`/visualize compile`) inlines these to produce self-contained files in `build/diagrams/`. Do not embed a `<style>` block or duplicate the design system in source files — edit `assets/style.css` instead.
+
+**Required `<head>` structure (source files):**
+
+```html
+<script>
+  /* Prevent FOUC — apply theme before CSS renders */
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<link rel="stylesheet" href="../../assets/style.css">
+```
+
+**Required nav bar (first element inside `<body>`):**
+
+```html
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
+```
+
+**Required script at end of `<body>` (after inline `nodeData`):**
+
+```html
+<script src="../../assets/theme.js"></script>
+```
+
+The design tokens (colors, radii, spacing) live in `assets/style.css` as CSS variables. Dark theme is `:root`; light theme overrides are `[data-theme="light"]`. Never hardcode hex values in source files.
+
 - Monospace font stack: `'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace`
-- All colors via CSS variables; never hardcode hex values outside `:root`
 - No gradients, no box-shadows (except focus rings), no blur effects
 - Border radius: `10px` standard, `14px` for outer cards
 - Borders: `1px solid rgba(255,255,255,0.08)` default, `rgba(255,255,255,0.18)` on hover/active
@@ -121,6 +150,24 @@ Each detail card has:
 - `<span class="ok">` for positive callouts: green text
 
 4 cards per component is the target. Cover: role/purpose, key behavior or config, gotcha or failure mode, commands or references.
+
+**`nodeData` structure** (defined in the page's inline `<script>` block, consumed by `selectNode` in `assets/theme.js`):
+
+```js
+const nodeData = {
+  myNode: {
+    dotClass: 'c-blue',   // one of: c-blue c-teal c-amber c-purple c-green
+    title: 'Display name shown in detail panel header',
+    cards: [
+      { title: 'Card title (3–5 words, uppercase)', body: 'Card body HTML...' },
+      ...
+    ]
+  },
+  ...
+};
+```
+
+Use `dotClass` — not a hardcoded hex `color` property — so the detail panel dot adapts to light/dark theme.
 
 ---
 

@@ -83,7 +83,7 @@ Before delivering a completed one-pager, confirm:
 
 ## HTML one-pager architecture
 
-There is no build system. Each output is a single `.html` file with no external dependencies — all CSS and JS are inline. Files are opened directly in a browser.
+Source files in `*/outputs/` reference shared assets via relative paths. The `/visualize compile` command inlines and minifies those assets to produce self-contained files in `build/diagrams/` for GitHub Pages deployment. Do not open source files and expect all features to work — compile first, then open from `build/`.
 
 ### Key constraints
 

@@ -9,201 +9,25 @@
 <meta name="cv-tags" content="ARO,CoreDNS,DNS,Networking">
 <meta name="cv-accent" content="blue">
 <title>ARO DNS Flow</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0f1117;
-    --bg2: #161b26;
-    --bg3: #1e2435;
-    --border: rgba(255,255,255,0.08);
-    --border-hi: rgba(255,255,255,0.18);
-    --text: #e2e8f0;
-    --text-muted: #8892a4;
-    --text-dim: #5a6478;
-    --blue: #3b82f6;
-    --blue-dim: rgba(59,130,246,0.15);
-    --blue-border: rgba(59,130,246,0.35);
-    --teal: #14b8a6;
-    --teal-dim: rgba(20,184,166,0.12);
-    --teal-border: rgba(20,184,166,0.3);
-    --amber: #f59e0b;
-    --amber-dim: rgba(245,158,11,0.12);
-    --amber-border: rgba(245,158,11,0.3);
-    --purple: #a78bfa;
-    --purple-dim: rgba(167,139,250,0.12);
-    --purple-border: rgba(167,139,250,0.3);
-    --red: #f87171;
-    --red-dim: rgba(248,113,113,0.1);
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.1);
-    --green-border: rgba(74,222,128,0.25);
-    --radius: 10px;
-    --radius-lg: 14px;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 32px 24px 48px;
-  }
-
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 16px; flex-wrap: wrap; }
-  .page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
-  .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-  .scope-banner {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber-border);
-    border-radius: var(--radius);
-    padding: 9px 14px;
-    font-size: 11px;
-    color: #fcd34d;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.6;
-  }
-  .scope-banner strong { color: #fde68a; }
-
-  .legend {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    margin-bottom: 20px; padding: 10px 14px;
-    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-  }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
-  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
-
-  .flow-wrap {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 28px 20px 20px;
-    margin-bottom: 20px; overflow-x: auto;
-  }
-
-  .flow { display: flex; align-items: center; gap: 0; min-width: 740px; position: relative; }
-
-  .node {
-    display: flex; flex-direction: column; align-items: center;
-    cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.15s;
-  }
-  .node:hover { transform: translateY(-2px); }
-  .node:hover .node-box { border-color: var(--border-hi); }
-
-  .node-box {
-    border-radius: var(--radius); border: 1px solid var(--border);
-    background: var(--bg3); padding: 10px 14px; text-align: center;
-    transition: border-color 0.2s, box-shadow 0.2s; min-width: 90px; position: relative;
-  }
-  .node-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); }
-  .node-box.oval { border-radius: 999px; padding: 10px 20px; }
-  .node-box.hexagon-like {
-    border-radius: 8px;
-    clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
-    padding: 12px 22px; min-width: 110px;
-  }
-  .node-box.cloud { border-radius: 24px 24px 8px 8px; padding: 10px 16px; min-width: 110px; }
-  .node-box.trapezoid {
-    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
-    padding: 10px 18px; min-width: 110px;
-  }
-
-  .node-label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
-  .node-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
-
-  .node-box.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   }
-  .node-box.c-teal   { background: var(--teal-dim);   border-color: var(--teal-border);   }
-  .node-box.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  }
-  .node-box.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
-  .node-box.c-green  { background: var(--green-dim);  border-color: var(--green-border);  }
-
-  .node-box.c-blue .node-label   { color: #93c5fd; }
-  .node-box.c-teal .node-label   { color: #5eead4; }
-  .node-box.c-amber .node-label  { color: #fcd34d; }
-  .node-box.c-purple .node-label { color: #c4b5fd; }
-  .node-box.c-green .node-label  { color: var(--green); }
-
-  .arrow { display: flex; align-items: center; flex: 1; min-width: 28px; position: relative; }
-  .arrow-line { height: 1px; background: var(--border-hi); flex: 1; position: relative; }
-  .arrow-line::after {
-    content: ''; position: absolute; right: -1px; top: -4px;
-    border: 5px solid transparent; border-left-color: var(--border-hi);
-  }
-  .arrow-label {
-    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-    font-size: 10px; color: var(--text-dim); white-space: nowrap;
-    background: var(--bg2); padding: 0 4px;
-  }
-
-  .detail-panel {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 24px;
-    margin-bottom: 20px; min-height: 130px;
-  }
-  .detail-panel h3 {
-    font-size: 13px; font-weight: 600; color: var(--text);
-    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-  }
-  .detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
-  .detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
-  .detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
-  .detail-card-body code { color: var(--amber); font-size: 11px; background: rgba(245,158,11,0.08); padding: 1px 4px; border-radius: 3px; }
-  .detail-card-body .warn { color: var(--red); }
-  .detail-card-body .ok { color: var(--green); }
-
-  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 10px; letter-spacing: 0.03em; }
-
-  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
-  .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
-  .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
-  .ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
-  .ref-item:last-child { border-bottom: none; }
-  .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
-  .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
-  .ref-item-val code { color: var(--amber); font-size: 10px; }
-
-  .timeline {
-    display: flex; align-items: stretch; background: var(--bg3);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    overflow: hidden; margin-top: 8px; font-size: 10px;
-  }
-  .tl-seg { flex: 1; padding: 6px 8px; text-align: center; border-right: 1px solid var(--border); }
-  .tl-seg:last-child { border-right: none; }
-  .tl-seg .tl-label { color: var(--text-muted); }
-  .tl-seg .tl-val { color: var(--text); font-weight: 600; margin-top: 2px; }
-  .tl-seg.tl-warn { background: var(--red-dim); }
-  .tl-seg.tl-ok { background: var(--green-dim); }
-
-  .kcs-bar {
-    background: var(--blue-dim); border: 1px solid var(--blue-border);
-    border-radius: var(--radius); padding: 10px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 8px; font-size: 11px; color: #93c5fd;
-  }
-  .kcs-bar a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--blue-border); }
-  .kcs-bar a:hover { border-bottom-color: var(--blue); }
-
-  @keyframes node-pulse {
-    0%   { box-shadow: 0 0 0 0 var(--blue-dim); }
-    70%  { box-shadow: 0 0 0 8px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
-  }
-  .node-box.active { animation: node-pulse 0.4s ease-out; }
-</style>
+<script>
+  /* Prevent flash of unstyled content — apply theme before CSS renders */
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
 
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
+
 <div class="page-header">
-  <div>
-    <div class="page-title">ARO DNS Flow</div>
-    <div class="page-subtitle">How DNS queries travel pods to the Internet and possible failure points.</div>
-  </div>
+  <div class="page-title">ARO DNS Flow</div>
+  <div class="page-subtitle">How DNS queries travel pods to the Internet and possible failure points.</div>
 </div>
 
 <div class="scope-banner">
@@ -368,7 +192,7 @@
 <script>
 const nodeData = {
   pod: {
-    color: '#3b82f6', title: 'Pod',
+    dotClass: 'c-blue', title: 'Pod',
     cards: [
       { title: 'How it finds DNS', body: `Pod's <code>/etc/resolv.conf</code> is injected by kubelet at startup. It points to the CoreDNS ClusterIP (typically <code>172.30.0.10</code> in OCP) as the nameserver, with the cluster's search domain list.` },
       { title: 'Search domains', body: `Kubernetes appends: <code>&lt;namespace&gt;.svc.cluster.local</code>, <code>svc.cluster.local</code>, <code>cluster.local</code>. Short names are tried with each suffix before falling through as absolute.` },
@@ -377,7 +201,7 @@ const nodeData = {
     ]
   },
   coredns: {
-    color: '#3b82f6', title: 'CoreDNS',
+    dotClass: 'c-blue', title: 'CoreDNS',
     cards: [
       { title: 'Role', body: `The cluster-internal DNS server. Runs as a DaemonSet in <code>openshift-dns</code>. Resolves <code>*.cluster.local</code> and <code>*.svc.cluster.local</code> names locally using its service/endpoint cache.` },
       { title: 'External query forwarding', body: `External names (not matching cluster zones) are forwarded upstream via <code>SystemResolvConf</code> — CoreDNS reads the node's <code>/etc/resolv.conf</code>, which on ARO points to local dnsmasq.` },
@@ -386,7 +210,7 @@ const nodeData = {
     ]
   },
   resolv: {
-    color: '#3b82f6', title: 'Node /etc/resolv.conf',
+    dotClass: 'c-blue', title: 'Node /etc/resolv.conf',
     cards: [
       { title: 'What it contains on ARO', body: `The <code>nameserver</code> entry points to the node's own IP (or <code>127.0.0.1</code>) where dnsmasq is listening. CoreDNS uses this as its upstream for non-cluster queries via the <code>SystemResolvConf</code> plugin.` },
       { title: 'resolv.conf.dnsmasq', body: `ARO nodes also have <code>/etc/resolv.conf.dnsmasq</code>, generated by NetworkManager — this is what dnsmasq itself reads for upstream resolver IPs. Inspect this when debugging multi-server misconfigurations (KCS 6957503).` },
@@ -395,7 +219,7 @@ const nodeData = {
     ]
   },
   dnsmasq: {
-    color: '#14b8a6', title: 'Local dnsmasq — ARO only',
+    dotClass: 'c-teal', title: 'Local dnsmasq — ARO only',
     cards: [
       { title: 'Role', body: `A lightweight DNS forwarder running on each ARO node, provisioned by the ARO service (not stock OCP/ROSA). Acts as a caching intermediary between CoreDNS and the Azure VNet DNS resolver.` },
       { title: 'Timeout / blocking behavior ⚠️', body: `<span class="warn">Per domain + record type: a single lost upstream query causes dnsmasq to block all retries for that name for 40 seconds.</span> CoreDNS returns SERVFAIL to callers for the duration. See KCS 7015390.` },
@@ -404,7 +228,7 @@ const nodeData = {
     ]
   },
   azuredns: {
-    color: '#f59e0b', title: 'Azure Default DNS',
+    dotClass: 'c-amber', title: 'Azure Default DNS',
     cards: [
       { title: 'Address', body: `<code>168.63.129.16</code> — Azure's well-known internal DNS IP. Reachable only from within the Azure VNet. Not routable on the public internet.` },
       { title: 'Capabilities', body: `Resolves all public internet domains. Also resolves Azure Private DNS zones linked to the VNet. Can be extended with Azure DNS Private Resolver for split-horizon or on-premises forwarding.` },
@@ -413,7 +237,7 @@ const nodeData = {
     ]
   },
   internet: {
-    color: '#4ade80', title: 'Internet / Public DNS',
+    dotClass: 'c-green', title: 'Internet / Public DNS',
     cards: [
       { title: 'Examples', body: `<code>github.com</code>, <code>google.com</code>, <code>azure.com</code>, <code>registry.access.redhat.com</code>, container registries, etc.` },
       { title: 'Resolution path', body: `Azure DNS recursively resolves public names and caches per TTL. From the cluster's perspective this is transparent — pods receive a normal answer.` },
@@ -422,7 +246,7 @@ const nodeData = {
     ]
   },
   customdns: {
-    color: '#a78bfa', title: 'Custom DNS servers',
+    dotClass: 'c-purple', title: 'Custom DNS servers',
     cards: [
       { title: 'Purpose', body: `Resolves internal / private domain names not handled by the cluster DNS or Azure public DNS. Examples: <code>*.corp.internal</code>, <code>*.on-prem.example.com</code>.` },
       { title: 'Limitation', body: `<span class="warn">Cannot resolve public internet names.</span> If misconfigured as the default forwarder rather than a zone-scoped forwarder, external resolution will break cluster-wide.` },
@@ -431,40 +255,7 @@ const nodeData = {
     ]
   },
 };
-
-let activeNode = null;
-
-function selectNode(id) {
-  if (activeNode) {
-    const prev = document.getElementById('box-' + activeNode);
-    if (prev) prev.classList.remove('active');
-  }
-  activeNode = id;
-  const box = document.getElementById('box-' + id);
-  if (box) box.classList.add('active');
-
-  const data = nodeData[id];
-  if (!data) return;
-
-  document.getElementById('detail-hint').style.display = 'none';
-  const content = document.getElementById('detail-content');
-  content.style.display = 'grid';
-
-  const panel = document.getElementById('detail-panel');
-  const existing = panel.querySelector('h3');
-  if (existing) existing.remove();
-
-  const h3 = document.createElement('h3');
-  h3.innerHTML = `<div class="dot" style="background:${data.color}"></div>${data.title}`;
-  panel.insertBefore(h3, content);
-
-  content.innerHTML = data.cards.map(c => `
-    <div class="detail-card">
-      <div class="detail-card-title">${c.title}</div>
-      <div class="detail-card-body">${c.body}</div>
-    </div>
-  `).join('');
-}
 </script>
+<script src="../../assets/theme.js"></script>
 </body>
 </html>
