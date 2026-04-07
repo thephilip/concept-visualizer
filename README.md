@@ -40,7 +40,7 @@ See `guide.md` for the full prompt template and authoring spec.
 
 | File | Topic | Sources |
 |---|---|---|
-| `aro/outputs/dns-resolution-flow.html` | ARO DNS resolution flow — pod → CoreDNS → dnsmasq → Azure DNS | `aro/sources/dns-resolution-flow.md` |
+| `aro/outputs/aro-dns-flow.html` | ARO DNS resolution flow — pod → CoreDNS → dnsmasq → Azure DNS | `aro/sources/aro-dns-flow.md` |
 
 ### ROSA
 
