@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Visualizer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --bg2: #161b26; --bg3: #1e2435;
+    --border: rgba(255,255,255,0.08); --border-hi: rgba(255,255,255,0.18);
+    --text: #e2e8f0; --text-muted: #8892a4; --text-dim: #5a6478;
+    --blue: #3b82f6; --teal: #14b8a6; --amber: #f59e0b;
+    --purple: #a78bfa; --green: #4ade80;
+    --radius: 10px; --radius-lg: 14px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 13px; line-height: 1.6; min-height: 100vh; padding: 48px 24px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .site-header { margin-bottom: 48px; text-align: center; }
+  .site-title { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 8px; }
+  .site-subtitle { font-size: 13px; color: var(--text-muted); max-width: 480px; margin: 0 auto; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; gap: 12px; }
+  .card:hover { border-color: var(--border-hi); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .card-accent { width: 36px; height: 4px; border-radius: 2px; }
+  .card-title { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+  .tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border); }
+  .card-arrow { font-size: 12px; color: var(--text-dim); margin-top: 4px; transition: color 0.2s; }
+  .card:hover .card-arrow { color: var(--text-muted); }
+  .footer { margin-top: 64px; text-align: center; font-size: 11px; color: var(--text-dim); }
+  .footer a { color: var(--text-dim); text-decoration: none; border-bottom: 1px solid var(--border); }
+  .footer a:hover { color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="site-header">
+    <div class="site-title">Concept Visualizer</div>
+    <div class="site-subtitle">Interactive architecture and flow diagrams for ARO, ROSA, and OpenShift troubleshooting</div>
+  </div>
+
+  <div class="card-grid">
+
+    <a class="card" href="diagrams/aro-dns-flow.html">
+      <div class="card-accent" style="background: var(--blue);"></div>
+      <div class="card-title">ARO DNS Flow</div>
+      <div class="card-desc">How DNS queries travel from pods through CoreDNS, dnsmasq, and Azure DNS — including the 40-second timeout failure mode and custom DNS forwarder paths.</div>
+      <div class="card-tags">
+        <span class="tag">ARO</span>
+        <span class="tag">CoreDNS</span>
+        <span class="tag">DNS</span>
+        <span class="tag">Networking</span>
+      </div>
+      <div class="card-arrow">View diagram →</div>
+    </a>
+
+    <a class="card" href="diagrams/rosa-hcp-network-topology.html">
+      <div class="card-accent" style="background: var(--amber);"></div>
+      <div class="card-title">ROSA HCP Network Topology</div>
+      <div class="card-desc">Cross-account architecture showing how the hosted control plane connects to customer worker nodes via AWS PrivateLink, including DNS, egress, and account boundary details.</div>
+      <div class="card-tags">
+        <span class="tag">ROSA HCP</span>
+        <span class="tag">Networking</span>
+        <span class="tag">PrivateLink</span>
+        <span class="tag">AWS</span>
+      </div>
+      <div class="card-arrow">View diagram →</div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    Red Hat Technical Support &nbsp;·&nbsp; <a href="https://github.com/thephilip/concept-visualizer" target="_blank">View on GitHub</a>
+  </div>
+
+</div>
+</body>
+</html>

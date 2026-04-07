@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="cv-title" content="ROSA HCP Network Topology">
+<meta name="cv-description" content="Cross-account architecture showing how the hosted control plane connects to customer worker nodes via AWS PrivateLink, including DNS, egress, and account boundary details.">
+<meta name="cv-platform" content="ROSA HCP">
+<meta name="cv-tags" content="ROSA HCP,Networking,PrivateLink,AWS">
+<meta name="cv-accent" content="amber">
+<title>ROSA HCP Network Topology</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b26;
+    --bg3: #1e2435;
+    --border: rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.18);
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --text-dim: #5a6478;
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.15);
+    --blue-border: rgba(59,130,246,0.35);
+    --teal: #14b8a6;
+    --teal-dim: rgba(20,184,166,0.12);
+    --teal-border: rgba(20,184,166,0.3);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-border: rgba(245,158,11,0.3);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --purple-border: rgba(167,139,250,0.3);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --green-border: rgba(74,222,128,0.25);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 32px 24px 48px;
+  }
+
+  .page-header { margin-bottom: 10px; }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .scope-banner {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    font-size: 11px;
+    color: #fcd34d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.6;
+  }
+  .scope-banner strong { color: #fde68a; }
+
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 20px; padding: 10px 14px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
+
+  .flow-wrap {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 20px 24px;
+    margin-bottom: 20px; overflow-x: auto;
+  }
+
+  .account-labels {
+    display: flex;
+    align-items: flex-end;
+    min-width: 740px;
+    margin-bottom: 14px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    gap: 0;
+  }
+  .account-label-rh {
+    width: 170px;
+    flex-shrink: 0;
+    text-align: center;
+    color: var(--amber);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--amber-border);
+  }
+  .account-label-gap {
+    width: 12px;
+    flex-shrink: 0;
+    border-bottom: 1px dashed var(--border-hi);
+    align-self: flex-end;
+    height: 14px;
+  }
+  .account-label-customer {
+    flex: 1;
+    text-align: center;
+    color: var(--purple);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--purple-border);
+  }
+
+  .flow { display: flex; align-items: center; gap: 0; min-width: 740px; position: relative; }
+
+  .node {
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.15s;
+  }
+  .node:hover { transform: translateY(-2px); }
+  .node:hover .node-box { border-color: var(--border-hi); }
+
+  .node-box {
+    border-radius: var(--radius); border: 1px solid var(--border);
+    background: var(--bg3); padding: 10px 14px; text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s; min-width: 90px; position: relative;
+  }
+  .node-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: node-pulse 0.4s ease-out; }
+  .node-box.cloud { border-radius: 24px 24px 8px 8px; padding: 10px 16px; min-width: 110px; }
+
+  .node-label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+  .node-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+
+  .node-box.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   }
+  .node-box.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  }
+  .node-box.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
+  .node-box.c-green  { background: var(--green-dim);  border-color: var(--green-border);  }
+
+  .node-box.c-blue .node-label   { color: #93c5fd; }
+  .node-box.c-amber .node-label  { color: #fcd34d; }
+  .node-box.c-purple .node-label { color: #c4b5fd; }
+  .node-box.c-green .node-label  { color: var(--green); }
+
+  .arrow { display: flex; align-items: center; flex: 1; min-width: 28px; position: relative; }
+  .arrow-line { height: 1px; background: var(--border-hi); flex: 1; position: relative; }
+  .arrow-line::after {
+    content: ''; position: absolute; right: -1px; top: -4px;
+    border: 5px solid transparent; border-left-color: var(--border-hi);
+  }
+  .arrow-label {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-dim); white-space: nowrap;
+    background: var(--bg2); padding: 0 4px;
+  }
+
+  .detail-panel {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px;
+    margin-bottom: 20px; min-height: 130px;
+  }
+  .detail-panel h3 {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
+  .detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .detail-card-body code { color: var(--amber); font-size: 11px; background: rgba(245,158,11,0.08); padding: 1px 4px; border-radius: 3px; }
+  .detail-card-body .warn { color: var(--red); }
+  .detail-card-body .ok { color: var(--green); }
+
+  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 16px; letter-spacing: 0.03em; }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
+  .ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+  .ref-item:last-child { border-bottom: none; }
+  .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+  .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
+  .ref-item-val code { color: var(--amber); font-size: 10px; }
+
+  .kcs-bar {
+    background: var(--blue-dim); border: 1px solid var(--blue-border);
+    border-radius: var(--radius); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; font-size: 11px; color: #93c5fd;
+  }
+  .kcs-bar a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--blue-border); }
+  .kcs-bar a:hover { border-bottom-color: var(--blue); }
+  .kcs-links { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  @keyframes node-pulse {
+    0%   { box-shadow: 0 0 0 0 var(--blue-dim); }
+    70%  { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-title">ROSA HCP Network Topology</div>
+  <div class="page-subtitle">Cross-account architecture: how the hosted control plane connects to customer worker nodes via AWS PrivateLink.</div>
+</div>
+
+<div class="scope-banner">
+  <span>⚠</span>
+  <span><strong>ROSA HCP-specific.</strong> This describes ROSA with Hosted Control Planes only. ROSA Classic places the control plane in the customer's AWS account — the cross-account PrivateLink model described here does not apply. Self-managed OCP and ARO have separate architectures.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> AWS platform / cloud service</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Kubernetes / OpenShift layer (customer VPC)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Customer-managed / private</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> External internet</div>
+</div>
+
+<div class="flow-wrap">
+
+  <div class="account-labels">
+    <div class="account-label-rh">Red Hat AWS account</div>
+    <div class="account-label-gap"></div>
+    <div class="account-label-customer">Customer AWS account / VPC</div>
+  </div>
+
+  <p class="hint">Click any component to see details</p>
+
+  <div class="flow">
+
+    <div class="node" onclick="selectNode('cp')">
+      <div class="node-box c-amber cloud" id="box-cp">
+        <div class="node-label">HCP Control Plane</div>
+        <div class="node-sub">API · etcd · schedulers</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">cross-account</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('privatelink')">
+      <div class="node-box c-amber" id="box-privatelink">
+        <div class="node-label">AWS PrivateLink</div>
+        <div class="node-sub">interface endpoint · customer VPC</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">private IP</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('workers')">
+      <div class="node-box c-blue" id="box-workers">
+        <div class="node-label">Worker Nodes</div>
+        <div class="node-sub">private subnets · OVN-K</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">0.0.0.0/0</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('natgw')">
+      <div class="node-box c-purple cloud" id="box-natgw">
+        <div class="node-label">NAT Gateway</div>
+        <div class="node-sub">public subnet · egress</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">via IGW</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('internet')">
+      <div class="node-box c-green cloud" id="box-internet">
+        <div class="node-label">Internet</div>
+        <div class="node-sub">registries · APIs · telemetry</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Route 53 secondary row — drops below Worker Nodes -->
+  <div style="display:flex;align-items:flex-start;margin-top:28px;min-width:740px;padding-left:322px;gap:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:1px;height:28px;background:var(--border-hi);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-hi);margin-bottom:2px;"></div>
+    </div>
+    <div style="width:44px;height:1px;background:var(--border-hi);margin-top:35px;"></div>
+    <div class="node" onclick="selectNode('route53')" style="margin-top:14px;">
+      <div class="node-box c-amber" id="box-route53">
+        <div class="node-label">Route 53</div>
+        <div class="node-sub">private hosted zones</div>
+      </div>
+    </div>
+    <div style="padding-left:16px;padding-top:18px;font-size:10px;color:var(--text-dim);line-height:1.8;max-width:320px;">
+      Two private zones per cluster &nbsp;•&nbsp; Plus a public zone for TLS cert validation only<br>
+      <code style="color:var(--amber);font-size:10px;">&lt;cluster&gt;.hypershift.local</code> &nbsp;•&nbsp; <code style="color:var(--amber);font-size:10px;">rosa.&lt;prefix&gt;.&lt;id&gt;.p3.openshiftapps.com</code>
+    </div>
+  </div>
+
+</div>
+
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">
+    ← Select a component above to see notes, gotchas, and relevant config.
+  </div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<div class="ref-grid">
+
+  <div class="ref-card">
+    <div class="ref-card-title">Default network CIDRs</div>
+    <div class="ref-item"><span class="ref-item-label">Machine (VPC)</span><span class="ref-item-val"><code>10.0.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Pod network</span><span class="ref-item-val"><code>10.128.0.0/14</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Service network</span><span class="ref-item-val"><code>172.30.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">VPC constraint</span><span class="ref-item-val">Machine CIDR must match VPC CIDR exactly</span></div>
+    <div class="ref-item"><span class="ref-item-label">CNI</span><span class="ref-item-val">OVN-Kubernetes only — no alternative</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">VPC prerequisites</div>
+    <div class="ref-item"><span class="ref-item-label">DNS hostnames</span><span class="ref-item-val">Must be enabled on VPC</span></div>
+    <div class="ref-item"><span class="ref-item-label">Public subnet tag</span><span class="ref-item-val"><code>kubernetes.io/role/elb=1</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Private subnet tag</span><span class="ref-item-val"><code>kubernetes.io/role/internal-elb=1</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">VPC sharing</span><span class="ref-item-val">Not supported across AWS accounts</span></div>
+    <div class="ref-item"><span class="ref-item-label">Multi-cluster VPC</span><span class="ref-item-val">Supported (BYO-VPC); non-overlapping CIDRs required</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Egress options</div>
+    <div class="ref-item"><span class="ref-item-label">Standard</span><span class="ref-item-val">NAT gateway — one per AZ recommended</span></div>
+    <div class="ref-item"><span class="ref-item-label">Enterprise</span><span class="ref-item-val">Transit gateway → centralized egress / on-prem</span></div>
+    <div class="ref-item"><span class="ref-item-label">Zero-egress</span><span class="ref-item-val"><code>--properties zero_egress:true</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Zero-egress caveat</span><span class="ref-item-val">quay.io / Insights unreachable; private registry mirror required</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Quick diagnostics</div>
+    <div class="ref-item"><span class="ref-item-label">Cluster network</span><span class="ref-item-val"><code>oc get network.config/cluster -o yaml</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Worker nodes</span><span class="ref-item-val"><code>oc get nodes -o wide</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">PrivateLink endpoint</span><span class="ref-item-val"><code>aws ec2 describe-vpc-endpoints --filters Name=tag:api.openshift.com/id,Values=&lt;cluster-id&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Route 53 zones</span><span class="ref-item-val"><code>aws route53 list-hosted-zones-by-vpc --vpc-id &lt;id&gt; --vpc-region &lt;region&gt;</code></span></div>
+  </div>
+
+</div>
+
+<div class="kcs-bar">
+  <span>References</span>
+  <div class="kcs-links">
+    <a href="https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/architecture/rosa-architecture-models" target="_blank">ROSA HCP Architecture ↗</a>
+    <a href="https://access.redhat.com/articles/7109571" target="_blank">KCS 7109571 — HCP vs Classic DNS ↗</a>
+    <a href="https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_rosa_with_hcp_clusters/rosa-hcp-aws-private-creating-cluster" target="_blank">HCP Private Cluster ↗</a>
+  </div>
+</div>
+
+<script>
+const nodeData = {
+  cp: {
+    color: '#f59e0b', title: 'HCP Control Plane — Red Hat AWS account',
+    cards: [
+      { title: 'What lives here', body: `API servers (2 per AZ), etcd (3-member quorum), OpenShift scheduler, OLM, cluster operators, and the HyperShift operator. All hosted entirely in Red Hat's AWS account. <span class="warn">Customer has no access to these nodes.</span>` },
+      { title: 'High availability', body: `Control plane is deployed across 3 availability zones by default. Each AZ runs at least one API server instance. etcd requires quorum across all 3 members. Red Hat SRE is responsible for control plane health, patching, and upgrades.` },
+      { title: 'Customer access boundary', body: `<code>cluster-admin</code> applies to application namespaces and worker-hosted components only. The <code>hypershift</code> and related SRE-managed namespaces are not accessible. <code>oc exec</code> into control plane pods is not available.` },
+      { title: 'PrivateLink endpoint service', body: `The control plane exposes an AWS PrivateLink endpoint service in the Red Hat account. Worker nodes and the ROSA CLI reach the Kubernetes API via an interface VPC endpoint provisioned in the customer's VPC — not over the public internet.` }
+    ]
+  },
+  privatelink: {
+    color: '#f59e0b', title: 'AWS PrivateLink',
+    cards: [
+      { title: 'Mandatory — not optional', body: `<span class="warn">Every ROSA HCP cluster uses PrivateLink regardless of whether the API endpoint is public or private.</span> It is the only supported cross-account conduit between the Red Hat control plane and the customer's VPC. There is no VPN or peering alternative.` },
+      { title: 'Interface endpoint (customer VPC)', body: `ROSA provisioning creates an interface VPC endpoint in the customer's VPC. The cluster API DNS name resolves to the private IP of this interface. All traffic to the API server traverses this endpoint and stays within the AWS network backbone.` },
+      { title: 'Default security group — gotcha', body: `The endpoint's default security group allows inbound only from within the VPC CIDR. <span class="warn">If you access the cluster from a peered VPC or Transit Gateway, that traffic is blocked by default.</span> Attach an additional security group with the appropriate inbound rules to allow it.` },
+      { title: 'Cross-account / cross-VPC access', body: `To permit access from a specific IAM role in another AWS account without VPC peering: <code>rosa edit cluster -c &lt;name&gt; --additional-allowed-principals arn:aws:iam::&lt;acct&gt;:role/&lt;role&gt;</code>. Can also be set at cluster creation time.` }
+    ]
+  },
+  workers: {
+    color: '#3b82f6', title: 'Worker Nodes — Customer AWS account',
+    cards: [
+      { title: 'Placement', body: `All worker nodes run exclusively in private subnets in the customer's VPC. <span class="warn">No worker nodes are placed in public subnets.</span> Public subnets exist only to host NAT gateways and public-facing load balancers.` },
+      { title: 'CNI — OVN-Kubernetes only', body: `<span class="ok">OVN-Kubernetes is the only supported CNI on ROSA HCP.</span> There is no plugin selection at installation time. The network type is enforced by the hosted control plane operator and cannot be changed post-install.` },
+      { title: 'Security groups', body: `ROSA provisioning creates security groups for: control plane ↔ worker traffic (via the PrivateLink endpoint), load balancer → worker node communication, and inter-node traffic. Custom security groups can be supplied before cluster creation if additional port controls are needed.` },
+      { title: 'Subnet tagging required', body: `Private subnets must have tag <code>kubernetes.io/role/internal-elb=1</code> for internal load balancer discovery. Public subnets must have tag <code>kubernetes.io/role/elb=1</code> for external load balancers. <span class="warn">Missing tags prevent the ingress operator from provisioning load balancers.</span>` }
+    ]
+  },
+  natgw: {
+    color: '#a78bfa', title: 'NAT Gateway / Egress',
+    cards: [
+      { title: 'Standard egress path', body: `Worker nodes in private subnets route <code>0.0.0.0/0</code> to a NAT gateway in a public subnet. The NAT gateway uses an Elastic IP to reach the internet through the VPC's Internet Gateway. Each NAT gateway requires one Elastic IP.` },
+      { title: 'High availability — gotcha', body: `<span class="warn">A single NAT gateway is a single point of egress failure.</span> For production multi-AZ clusters, deploy one NAT gateway per availability zone and configure each AZ's private subnet route table to use its local NAT gateway.` },
+      { title: 'Enterprise egress (Transit Gateway)', body: `For centralized egress or on-premises connectivity: attach the cluster VPC to a Transit Gateway. Route <code>0.0.0.0/0</code> to the TGW. Enables centralized firewall inspection, AWS Direct Connect, and shared egress across multiple VPCs.` },
+      { title: 'Zero-egress clusters', body: `<code>--properties zero_egress:true</code> creates a cluster with no outbound internet path. <span class="warn">quay.io, registry.access.redhat.com, Red Hat Insights, and telemetry endpoints become unreachable.</span> Requires a private mirror registry and VPC endpoints for required AWS service APIs.` }
+    ]
+  },
+  internet: {
+    color: '#4ade80', title: 'Internet',
+    cards: [
+      { title: 'Required outbound endpoints', body: `Worker nodes need outbound HTTPS to: <code>quay.io</code>, <code>registry.access.redhat.com</code> (image pulls), <code>api.openshift.com</code> / <code>console.redhat.com</code> (telemetry, Insights), and AWS service APIs (EC2, ELB, Route 53). Blocking these causes node bootstrapping or operator failures.` },
+      { title: 'Public vs private API endpoint', body: `<strong>Public cluster:</strong> <code>api.&lt;cluster&gt;.openshiftapps.com</code> resolves to a public NLB — accessible from the internet with valid credentials. The actual request still flows through the PrivateLink interface endpoint internally.<br><strong>Private cluster:</strong> API DNS name is not publicly resolvable; reachable only from within the VPC or connected networks.` },
+      { title: 'Application ingress (*.apps)', body: `Application routes are public by default on public clusters, served via a public NLB provisioned by the ingress operator. To make ingress private, set <code>endpointPublishingStrategy.type: Private</code> on the IngressController. <span class="warn">This only affects newly created load balancers; existing ones are not replaced automatically.</span>` },
+      { title: 'Security perimeter', body: `AWS Security Groups and any Network Firewall or WAF rules sit between the NAT gateway and the internet. <span class="warn">DNS failures or connectivity issues may originate at this layer, not in-cluster.</span> Verify outbound UDP/TCP 53 and HTTPS (443) to required endpoints are permitted before investigating CoreDNS or cluster config.` }
+    ]
+  },
+  route53: {
+    color: '#f59e0b', title: 'Route 53 Hosted Zones',
+    cards: [
+      { title: 'Two private zones per cluster', body: `ROSA HCP creates two private hosted zones associated with the customer's VPC: <code>&lt;cluster-name&gt;.hypershift.local</code> (internal cluster services) and <code>rosa.&lt;domain-prefix&gt;.&lt;id&gt;.p3.openshiftapps.com</code> (API and app endpoints). Both are resolvable only from within the VPC.` },
+      { title: 'Public zone — TLS cert validation only', body: `A public hosted zone is also created for the same cluster domain. <span class="warn">This is for TLS certificate DNS-01 validation only — not for providing public cluster access.</span> Records in the public zone point to private IPs. The public zone does not make the cluster reachable from the internet.` },
+      { title: 'Custom DNS servers — gotcha', body: `If workers use a custom DNS server (set via DHCP option set on the VPC), that server must forward the two private zone domains to Route 53 Inbound Resolver endpoints deployed in the customer's VPC. <span class="warn">Without this forwarding, nodes cannot resolve cluster-internal names and will fail to join.</span>` },
+      { title: 'No dnsmasq — differs from ARO', body: `<span class="ok">ROSA HCP has no node-level dnsmasq forwarder.</span> CoreDNS forwards external queries directly to the VPC resolver (CIDR+2, e.g. <code>10.0.0.2</code> for a <code>10.0.0.0/16</code> VPC). The 40-second blocking behavior in KCS 7015390 is ARO-specific and does not apply here.` }
+    ]
+  }
+};
+
+let activeNode = null;
+
+function selectNode(id) {
+  if (activeNode) {
+    const prev = document.getElementById('box-' + activeNode);
+    if (prev) prev.classList.remove('active');
+  }
+  activeNode = id;
+  const box = document.getElementById('box-' + id);
+  if (box) box.classList.add('active');
+
+  const data = nodeData[id];
+  if (!data) return;
+
+  document.getElementById('detail-hint').style.display = 'none';
+  const content = document.getElementById('detail-content');
+  content.style.display = 'grid';
+
+  const panel = document.getElementById('detail-panel');
+  const existing = panel.querySelector('h3');
+  if (existing) existing.remove();
+
+  const h3 = document.createElement('h3');
+  h3.innerHTML = `<div class="dot" style="background:${data.color}"></div>${data.title}`;
+  panel.insertBefore(h3, content);
+
+  content.innerHTML = data.cards.map(c => `
+    <div class="detail-card">
+      <div class="detail-card-title">${c.title}</div>
+      <div class="detail-card-body">${c.body}</div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
