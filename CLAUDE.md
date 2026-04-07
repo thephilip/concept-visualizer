@@ -2,9 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# ocp-visual-concepts
+# Concept Visualizer
 
 This project produces interactive, single-page HTML reference documents that explain OpenShift, ARO, ROSA, and OCP architectures and concepts for use by Red Hat Technical Support Engineers.
+
+## Primary workflow: `/visualize`
+
+The `/visualize` slash command is the standard entry point for all one-pager work. It has three modes:
+
+| Invocation | What it does |
+|---|---|
+| `/visualize` or `/visualize [topic]` | Create a new one-pager — reads spec, researches, confirms scope, builds HTML |
+| `/visualize build` | Compile all `*/outputs/*.html` into `build/` for GitHub Pages deployment |
+| `/visualize fact-check [path]` | Verify accuracy of an existing one-pager against official sources |
+
+The full instructions for each mode are in `.claude/commands/visualize.md`. Read that file when running the command — do not reconstruct the workflow from memory.
 
 ## What you are helping with
 
@@ -124,6 +136,24 @@ Each card has `.detail-card-title` (10px, uppercase, 3–5 words) and `.detail-c
 Inline formatting: `<code>` = amber text on slight amber background; `<span class="warn">` = red; `<span class="ok">` = green.  
 Target: 4 cards per node covering role/purpose, key behavior, gotcha/failure mode, commands/references.
 
+### Required `cv-*` meta tags
+
+Every HTML one-pager must include these meta tags immediately after `<meta name="viewport">`. They are read by `/visualize build` to generate the index — files missing them are skipped by the build.
+
+```html
+<meta name="cv-title" content="[page title]">
+<meta name="cv-description" content="[1–2 sentence description for the index card]">
+<meta name="cv-platform" content="[ARO | ROSA HCP | ROSA Classic | OCP | Multi]">
+<meta name="cv-tags" content="[comma-separated tags, e.g. ARO,DNS,Networking]">
+<meta name="cv-accent" content="[blue | teal | amber | purple | green]">
+```
+
+`cv-accent` should match the dominant color of the diagram's main flow nodes.
+
+### Build pipeline
+
+`/visualize build` compiles all `*/outputs/*.html` into `build/diagrams/` and regenerates `build/index.html` as a GitHub Pages index. Card sort order: ARO → ROSA HCP → ROSA Classic → OCP → Multi.
+
 ### Sources file convention
 
-For each `outputs/topic.html`, create `sources/topic.md` listing every KCS article, docs URL, and Jira/bug reference used. Note the date accessed for any time-sensitive claims.
+For each `outputs/topic.html`, create `sources/topic.md` listing every KCS article, docs URL, and Jira/bug reference used. Note the date accessed and access status (public / paywalled) for any time-sensitive claims.
