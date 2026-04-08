@@ -49,7 +49,7 @@ Include this verbatim when prompting Claude. It defines the visual language, acc
 
 ### Visual design
 
-Source files reference shared assets at `../../assets/style.css` and `../../assets/theme.js`. The compile step (`/visualize compile`) inlines these to produce self-contained files in `build/diagrams/`. Do not embed a `<style>` block or duplicate the design system in source files — edit `assets/style.css` instead.
+Source files reference shared assets at `../../assets/style.css` and `../../assets/theme.js`. The compile step (`/visualize compile`) inlines these to produce self-contained files in `docs/diagrams/`. Do not embed a `<style>` block or duplicate the design system in source files — edit `assets/style.css` instead.
 
 **Required `<head>` structure (source files):**
 

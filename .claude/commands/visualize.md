@@ -109,9 +109,9 @@ The sources file must list every URL and KCS article used, with access status (p
 
 ---
 
-## [Build] — Compile all outputs to `build/`
+## [Build] — Compile all outputs to `docs/`
 
-Compile every one-pager in the project into the `build/` directory for GitHub Pages deployment.
+Compile every one-pager in the project into the `docs/` directory for GitHub Pages deployment.
 
 ### Step 1: Discover all one-pagers
 
@@ -125,11 +125,11 @@ Glob all files matching `*/outputs/*.html`. For each file, read the `cv-*` meta 
 
 If any file is missing `cv-*` tags, report it to the user and skip it (do not guess values).
 
-### Step 2: Copy files to `build/diagrams/`
+### Step 2: Copy files to `docs/diagrams/`
 
-Create `build/diagrams/` if it does not exist. Copy each discovered HTML file into it, preserving the original filename.
+Create `docs/diagrams/` if it does not exist. Copy each discovered HTML file into it, preserving the original filename.
 
-### Step 3: Generate `build/index.html`
+### Step 3: Generate `docs/index.html`
 
 Generate the Concept Visualizer index using the template below. For each discovered one-pager, insert a `<a class="card">` block with the extracted metadata.
 
@@ -202,13 +202,13 @@ Replace `GITHUB_REPO` with the actual `owner/repo` path. If the git remote is al
 
 ### Step 4: Report
 
-List every file copied to `build/diagrams/`, confirm `build/index.html` was written, and show the card titles that were generated. If any `*/outputs/*.html` files were skipped due to missing `cv-*` tags, list them so the user can fix them.
+List every file copied to `docs/diagrams/`, confirm `docs/index.html` was written, and show the card titles that were generated. If any `*/outputs/*.html` files were skipped due to missing `cv-*` tags, list them so the user can fix them.
 
 ---
 
 ## [Compile] — Produce self-contained, minified outputs for deployment
 
-Compile every source one-pager into a fully self-contained single HTML file in `build/diagrams/`, then regenerate `build/index.html`. This is the step that publishes to GitHub Pages.
+Compile every source one-pager into a fully self-contained single HTML file in `docs/diagrams/`, then regenerate `docs/index.html`. This is the step that publishes to GitHub Pages.
 
 ### Step 1: Read shared assets
 
@@ -225,17 +225,17 @@ For each source file:
 1. Read the full HTML.
 2. Replace `<link rel="stylesheet" href="../../assets/style.css">` with `<style>[contents of style.css]</style>`.
 3. Replace `<script src="../../assets/theme.js"></script>` with `<script>[contents of theme.js]</script>`.
-4. Rewrite the nav bar back-link: replace `href="../index.html"` with `href="../index.html"` (already correct for `build/diagrams/` location — no change needed).
+4. Rewrite the nav bar back-link: replace `href="../index.html"` with `href="../index.html"` (already correct for `docs/diagrams/` location — no change needed).
 5. Apply basic minification:
    - Strip CSS comments (`/* ... */`)
    - Strip HTML comments (`<!-- ... -->`) except `<!DOCTYPE`
    - Collapse runs of whitespace in CSS/JS to single spaces (preserve content inside string literals)
    - Do **not** mangle variable names or alter HTML content/attributes
-6. Write the result to `build/diagrams/[original-filename].html`.
+6. Write the result to `docs/diagrams/[original-filename].html`.
 
-### Step 4: Regenerate `build/index.html`
+### Step 4: Regenerate `docs/index.html`
 
-Follow the same index generation logic as **[Build]** — read `cv-*` tags from the compiled files, generate cards, write `build/index.html`. The index template is in the **[Build]** section.
+Follow the same index generation logic as **[Build]** — read `cv-*` tags from the compiled files, generate cards, write `docs/index.html`. The index template is in the **[Build]** section.
 
 The index page should also include the theme toggle. Add this immediately after `<body>` in the index:
 
@@ -261,7 +261,7 @@ Inline `assets/theme.js` at the end of `<body>` in the index as well (only the t
 
 ### Step 5: Report
 
-List every file written to `build/diagrams/`, confirm `build/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any skipped files.
+List every file written to `docs/diagrams/`, confirm `docs/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any skipped files.
 
 ---
 
