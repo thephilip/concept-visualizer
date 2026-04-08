@@ -62,6 +62,7 @@ Claude will display a help banner, read the spec and platform conventions, resea
 | File | Topic | Sources |
 |---|---|---|
 | `aro/outputs/aro-dns-flow.html` | ARO DNS resolution flow — pod → CoreDNS → dnsmasq → Azure DNS | `aro/sources/aro-dns-flow.md` |
+| `aro/outputs/aro-networking.html` | ARO networking — Public/Internal LB, NSG, Private Link, egress SNAT | `aro/sources/aro-networking.md` |
 
 ### HCP
 
