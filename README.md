@@ -59,7 +59,7 @@ Sub-commands:
 
 | File | Topic | Sources |
 |---|---|---|
-| `rosa/outputs/rosa-hcp-network-topology.html` | ROSA HCP cross-account network topology — PrivateLink, egress, Route 53 | `rosa/sources/rosa-hcp-network-topology.md` |
+| `rosa/outputs/rosa-hcp-networking.html` | ROSA HCP networking — cross-account PrivateLink, egress, Route 53 | `rosa/sources/rosa-hcp-networking.md` |
 
 ### OCP
 
