@@ -1,6 +1,6 @@
 # Concept Visualizer
 
-Interactive architecture diagrams for ARO, ROSA, and OCP — built for Technical Support Engineers.
+Interactive architecture diagrams for ARO, ROSA, HCP, and OCP — built for Technical Support Engineers.
 
 **Live site:** [thephilip.github.io/concept-visualizer](https://thephilip.github.io/concept-visualizer/)
 
@@ -10,8 +10,9 @@ Interactive architecture diagrams for ARO, ROSA, and OCP — built for Technical
 |---|---|
 | `guide.md` | Spec for authoring new one-pagers — read this first |
 | `assets/` | Shared CSS design system and JS (theme toggle, interactivity) |
-| `aro/CLAUDE.md` | ARO platform conventions, known KCS, gotchas |
-| `rosa/CLAUDE.md` | ROSA Classic and HCP conventions, known issues |
+| `aro/CLAUDE.md` | ARO Classic platform conventions, known KCS, gotchas |
+| `hcp/CLAUDE.md` | HyperShift / HCP conventions (ROSA HCP, ARO HCP, Agent-based) |
+| `rosa/CLAUDE.md` | ROSA Classic conventions |
 | `ocp/CLAUDE.md` | Self-managed OCP conventions |
 | `{platform}/outputs/` | Source HTML one-pagers (reference shared assets) |
 | `{platform}/sources/` | Markdown source notes per one-pager |
@@ -31,13 +32,20 @@ Use the `/visualize` slash command in Claude Code:
 
 Claude will display a help banner, read the spec and platform conventions, research official sources, confirm scope, and build the HTML. You can also **attach a screenshot or existing flowchart** — Claude will use it as the structural basis for the diagram.
 
-Sub-commands:
-
 | Command | What it does |
 |---|---|
 | `/visualize [topic]` | Create a new one-pager |
 | `/visualize compile` | Inline assets, minify, and publish to `docs/` |
-| `/visualize fact-check [file]` | Verify accuracy against official sources |
+| `/visualize fact-check [file]` | Verify accuracy and check for dead links |
+
+## Platform routing
+
+| Topic | Folder |
+|---|---|
+| ARO Classic (DNS, upgrades, identity) | `aro/` |
+| ROSA HCP, ARO HCP, generic HyperShift | `hcp/` |
+| ROSA Classic | `rosa/` |
+| Self-managed OCP | `ocp/` |
 
 ## Contributing
 
@@ -55,11 +63,16 @@ Sub-commands:
 |---|---|---|
 | `aro/outputs/aro-dns-flow.html` | ARO DNS resolution flow — pod → CoreDNS → dnsmasq → Azure DNS | `aro/sources/aro-dns-flow.md` |
 
-### ROSA
+### HCP
 
 | File | Topic | Sources |
 |---|---|---|
-| `rosa/outputs/rosa-hcp-networking.html` | ROSA HCP networking — cross-account PrivateLink, egress, Route 53 | `rosa/sources/rosa-hcp-networking.md` |
+| `hcp/outputs/hcp-konnectivity.html` | Konnectivity in HyperShift HCP — tunnel architecture, :8090/:8091, proxy sidecars | `hcp/sources/hcp-konnectivity.md` |
+| `hcp/outputs/rosa-hcp-networking.html` | ROSA HCP networking — cross-account PrivateLink, egress, Route 53 | `hcp/sources/rosa-hcp-networking.md` |
+
+### ROSA Classic
+
+*None yet.*
 
 ### OCP
 

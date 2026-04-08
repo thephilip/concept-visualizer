@@ -27,7 +27,7 @@ When a user asks you to create, update, or review a one-pager in this project, y
 ## Project layout
 
 ```
-ocp-visual-concepts/
+concept-visualizer/
 ├── CLAUDE.md              ← you are here
 ├── README.md
 ├── guide.md               ← one-pager spec; read this before authoring
@@ -37,8 +37,13 @@ ocp-visual-concepts/
 │   └── outputs/           ← rendered HTML one-pagers
 │   └── sources/           ← markdown source notes per one-pager
 │
+├── hcp/
+│   ├── CLAUDE.md          ← HyperShift/HCP conventions; read for any HCP topic
+│   └── outputs/           ← HCP one-pagers (ROSA HCP, ARO HCP, generic HCP)
+│   └── sources/
+│
 ├── rosa/
-│   ├── CLAUDE.md          ← ROSA-specific conventions; read for any ROSA topic
+│   ├── CLAUDE.md          ← ROSA Classic conventions; read for ROSA Classic topics
 │   └── outputs/
 │   └── sources/
 │
@@ -52,10 +57,15 @@ ocp-visual-concepts/
 
 | User asks about | Read before starting |
 |---|---|
-| ARO (Azure Red Hat OpenShift) | `guide.md` + `aro/CLAUDE.md` |
-| ROSA Classic or ROSA HCP | `guide.md` + `rosa/CLAUDE.md` |
+| ARO (Azure Red Hat OpenShift) Classic | `guide.md` + `aro/CLAUDE.md` |
+| ARO HCP (Hosted Control Planes) | `guide.md` + `hcp/CLAUDE.md` + `aro/CLAUDE.md` |
+| ROSA Classic | `guide.md` + `rosa/CLAUDE.md` |
+| ROSA HCP | `guide.md` + `hcp/CLAUDE.md` |
+| HyperShift / generic HCP concepts | `guide.md` + `hcp/CLAUDE.md` |
 | Self-managed OCP | `guide.md` + `ocp/CLAUDE.md` |
 | A concept spanning multiple platforms | `guide.md` + all relevant platform `CLAUDE.md` files |
+
+**HCP content belongs in `hcp/`**, not in `rosa/` or `aro/`. ROSA Classic content belongs in `rosa/`. If content applies to all HCP variants (ROSA HCP, ARO HCP, Agent-based), scope it as Multi and save it in `hcp/`.
 
 If you are unsure which platform a topic belongs to, ask before starting. Misscoping a one-pager (e.g. presenting ARO-specific behavior as universal) is the most common accuracy failure in this project.
 
