@@ -31,6 +31,24 @@
       ],
       "accent": "amber",
       "source": "aro/outputs/aro-networking.html",
+      "author": "Philip Smith",
+      "compiledAt": "2026-04-08"
+    },
+    {
+      "file": "aro-vnet-peering.html",
+      "title": "ARO VNet Peering",
+      "description": "Azure Virtual Network peering in a hub-and-spoke topology \u2014 NVA-based egress, gateway transit, remote gateway, and UDRs as commonly deployed with ARO clusters.",
+      "platform": "ARO",
+      "tags": [
+        "ARO",
+        "Networking",
+        "VNet Peering",
+        "Azure",
+        "Hub-and-Spoke",
+        "NVA"
+      ],
+      "accent": "amber",
+      "source": "aro/outputs/aro-vnet-peering.html",
       "author": "unknown",
       "compiledAt": "2026-04-08"
     },
