@@ -195,7 +195,7 @@
     <div class="ref-item"><span class="ref-item-label">Transitive routing</span><span class="ref-item-val"><span class="warn">Non-transitive — VNet A cannot reach VNet B via Hub without direct peering or NVA routing</span></span></div>
     <div class="ref-item"><span class="ref-item-label">Overlapping CIDRs</span><span class="ref-item-val"><span class="warn">Not allowed between peered VNets</span></span></div>
     <div class="ref-item"><span class="ref-item-label">One gateway per VNet</span><span class="ref-item-val">UseRemoteGateways and local gateway are mutually exclusive</span></div>
-    <div class="ref-item"><span class="ref-item-label">Max peers</span><span class="ref-item-val">500 (1,000 with Azure VNET Manager)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Max peers</span><span class="ref-item-val">500 (1,000 with Azure Virtual Network Manager)</span></div>
   </div>
 
   <div class="ref-card">
@@ -242,14 +242,14 @@ const nodeData = {
       { title: 'Role', body: `A firewall, proxy, or inspection appliance (e.g. Azure Firewall, Palo Alto, Fortinet) running as a VM in the hub. Inspects and filters traffic between spoke VNets and the internet or on-premises. Positioned in its own subnet in the Hub VNet.` },
       { title: 'Service chaining via UDR', body: `Traffic is steered through the NVA using UDRs on spoke VNets, setting the NVA's private IP as the next hop. The NVA then forwards traffic to its destination. <span class="warn">You cannot use a UDR with an ExpressRoute gateway as the next hop type</span> — only VM or VPN gateway next hops are supported.` },
       { title: 'Impact on ARO egress', body: `If a UDR routes ARO cluster egress (<code>0.0.0.0/0</code>) through an NVA, all outbound traffic — including traffic to Azure Resource Manager, <code>quay.io</code>, <code>registry.access.redhat.com</code>, and ARO control plane endpoints — must pass through the NVA. Blocking any required endpoint will break the cluster.` },
-      { title: 'High availability', body: `A single NVA VM is a single point of failure. Production deployments should use NVA HA pairs (active-passive or active-active) with an internal load balancer as the UDR next hop, or use Azure Firewall (zone-redundant by default).` },
+      { title: 'High availability', body: `A single NVA VM is a single point of failure. Production deployments should use NVA HA pairs (active-passive or active-active) with an internal load balancer as the UDR next hop, or use Azure Firewall (Standard/Premium SKUs have built-in high availability; availability zone redundancy requires explicit configuration at deployment time).` },
     ]
   },
   vpngw: {
     dotClass: 'c-amber', title: 'VPN Gateway',
     cards: [
       { title: 'Role', body: `Provides connectivity from the Hub VNet to on-premises networks via IPsec/IKE VPN or ExpressRoute. Deployed in the Gateway Subnet of the Hub VNet. Can be shared with spoke VNets via gateway transit, eliminating the cost and complexity of a gateway in each spoke.` },
-      { title: 'Gateway transit', body: `Set <code>AllowGatewayTransit=true</code> on the hub side of the peering. Spoke VNets then set <code>UseRemoteGateways=true</code> to use the hub's gateway as if it were their own. <span class="warn">The VPN Gateway must exist in the hub before the peering is created</span> — if it's added after, reset the peering to sync.` },
+      { title: 'Gateway transit', body: `Set <code>AllowGatewayTransit=true</code> on the hub side of the peering. Spoke VNets then set <code>UseRemoteGateways=true</code> to use the hub's gateway as if it were their own. <span class="warn">The VPN Gateway must exist in the hub before the peering is created</span> — if it's added after, update the existing peering settings to enable gateway transit (go to the peering → check Allow Gateway Transit → Save).` },
       { title: 'One gateway per VNet', body: `<span class="warn">A VNet can have only one gateway — either local or remote.</span> A spoke VNet using <code>UseRemoteGateways</code> cannot simultaneously have its own VPN Gateway. Plan your gateway strategy before deploying ARO.` },
       { title: 'Global peering constraint', body: `When VNets are <em>globally</em> peered (across Azure regions), resources cannot communicate with the front-end IP of a <span class="warn">Basic SKU</span> load balancer in the globally peered VNet. Use Standard SKU load balancers for cross-region hub-and-spoke with ARO.` },
     ]

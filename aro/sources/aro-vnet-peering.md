@@ -9,7 +9,16 @@
 | MS Learn — Hub-and-spoke topology | https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke | Public | Referenced for hub-and-spoke architecture patterns. |
 
 ## Date verified
-2026-04-08
+2026-04-08 (fact-checked same day)
+
+## Corrections applied
+- **Azure Firewall "zone-redundant by default"** — incorrect. AZ redundancy is not automatic; requires explicit configuration at deployment. Corrected to note built-in HA only.
+- **"reset the peering to sync"** — incorrect. When gateway is added after peering exists, you update (modify) the existing peering settings, not delete/recreate. Corrected to reflect portal flow.
+- **"Azure VNET Manager"** — incorrect product name. Corrected to "Azure Virtual Network Manager".
+
+## Sources used for fact-check
+- MS Learn — Gateway Transit: https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-peering-gateway-transit
+- MS Learn — Azure Firewall Overview: https://learn.microsoft.com/en-us/azure/firewall/overview
 
 ## Time-sensitive claims
 - **Max 500 peers per VNet** (1,000 with Azure Virtual Network Manager) — verify against current Azure limits
