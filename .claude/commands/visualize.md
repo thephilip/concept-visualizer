@@ -191,7 +191,7 @@ For each card:
     <!-- CARDS -->
   </div>
   <div class="footer">
-    Red Hat Technical Support &nbsp;·&nbsp; <a href="https://github.com/thephilip/concept-visualizer" target="_blank">View on GitHub</a>
+    <a href="https://github.com/thephilip/concept-visualizer" target="_blank">View on GitHub</a>
   </div>
 </div>
 </body>
