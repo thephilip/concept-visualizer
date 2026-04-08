@@ -20,14 +20,14 @@
   /* SVG-based diagram overrides */
   .diagram-wrap {
     position: relative;
-    height: 470px;
+    height: 360px;
     min-width: 900px;
     overflow-x: auto;
   }
   .diagram-svg {
     position: absolute;
     top: 0; left: 0;
-    width: 900px; height: 470px;
+    width: 900px; height: 360px;
     pointer-events: none;
     overflow: visible;
   }
@@ -80,7 +80,7 @@
   <div class="diagram-wrap">
 
     
-    <svg class="diagram-svg" viewBox="0 0 900 470" xmlns="http://www.w3.org/2000/svg">
+    <svg class="diagram-svg" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="ah-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(20,184,166,0.85)"/>
@@ -100,64 +100,58 @@
       </defs>
 
       
-      <rect x="10" y="30" width="420" height="428" rx="10"
+      <rect x="10" y="28" width="420" height="314" rx="10"
         fill="rgba(74,222,128,0.025)" stroke="rgba(74,222,128,0.18)" stroke-width="1"/>
-      <rect x="450" y="30" width="440" height="428" rx="10"
+      <rect x="450" y="28" width="440" height="314" rx="10"
         fill="rgba(59,130,246,0.025)" stroke="rgba(59,130,246,0.18)" stroke-width="1"/>
 
       
-      <text x="220" y="23" text-anchor="middle" font-size="9" font-weight="600"
+      <text x="220" y="22" text-anchor="middle" font-size="9" font-weight="600"
         letter-spacing="0.1em" fill="rgba(74,222,128,0.45)"
         font-family="'SF Mono','Fira Code',ui-monospace,monospace">GUEST / DATA PLANE</text>
-      <text x="670" y="23" text-anchor="middle" font-size="9" font-weight="600"
+      <text x="670" y="22" text-anchor="middle" font-size="9" font-weight="600"
         letter-spacing="0.1em" fill="rgba(59,130,246,0.45)"
         font-family="'SF Mono','Fira Code',ui-monospace,monospace">HOSTED CONTROL PLANE (MANAGEMENT CLUSTER)</text>
 
       
 
       
-      <path d="M 242,190 C 390,190 430,228 658,228"
+      <path d="M 242,99 C 390,99 430,195 650,195"
         stroke="rgba(20,184,166,0.65)" stroke-width="2.5" fill="none"
         stroke-dasharray="8,4"
         marker-start="url(#ah-teal)" marker-end="url(#ah-teal)"/>
-      <text x="435" y="208" text-anchor="middle" font-size="9"
+      <text x="430" y="148" text-anchor="middle" font-size="9"
         fill="rgba(20,184,166,0.7)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">mTLS · outbound :8091</text>
 
       
-      <path d="M 130,220 L 110,332"
+      <path d="M 140,128 L 110,240"
         stroke="rgba(74,222,128,0.45)" stroke-width="1.5" fill="none"
         stroke-dasharray="4,3" marker-end="url(#ah-green)"/>
-      <text x="93" y="280" text-anchor="end" font-size="8"
+      <text x="93" y="188" text-anchor="end" font-size="8"
         fill="rgba(74,222,128,0.45)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">fwd traffic</text>
 
       
-      <path d="M 627,80 L 662,80"
+      <path d="M 627,74 L 650,74"
         stroke="rgba(59,130,246,0.6)" stroke-width="1.5" fill="none"
         marker-start="url(#ah-blue)" marker-end="url(#ah-blue)"/>
-      <text x="644" y="72" text-anchor="middle" font-size="8"
-        fill="rgba(59,130,246,0.5)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">intra-pod</text>
 
       
-      <path d="M 752,110 L 752,200"
+      <path d="M 742,103 L 742,168"
         stroke="rgba(245,158,11,0.5)" stroke-width="1.5" fill="none"
         marker-end="url(#ah-amber)"/>
-      <text x="762" y="158" font-size="8"
-        fill="rgba(245,158,11,0.5)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">:8091</text>
 
       
-      <path d="M 702,110 L 702,155 L 560,155 L 560,282"
+      <path d="M 680,103 L 680,140 L 548,140 L 548,168"
         stroke="rgba(245,158,11,0.5)" stroke-width="1.5" fill="none"
         marker-end="url(#ah-amber)"/>
-      <text x="625" y="150" text-anchor="middle" font-size="8"
-        fill="rgba(245,158,11,0.45)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">:8090</text>
 
       
-      <path d="M 666,348 L 658,338"
+      <path d="M 652,278 L 638,223"
         stroke="rgba(167,139,250,0.5)" stroke-width="1.5" fill="none"
         marker-end="url(#ah-purple)"/>
 
       
-      <path d="M 550,378 L 558,338"
+      <path d="M 547,278 L 548,223"
         stroke="rgba(20,184,166,0.5)" stroke-width="1.5" fill="none"
         marker-end="url(#ah-teal)"/>
     </svg>
@@ -165,7 +159,7 @@
     
 
     
-    <div class="dn" style="left:60px;top:162px;width:182px;" onclick="selectNode('kagt')">
+    <div class="dn" style="left:60px;top:70px;width:182px;" onclick="selectNode('kagt')">
       <div class="node-box c-teal hexagon-like" id="box-kagt">
         <div class="node-label">konnectivity-agent</div>
         <div class="node-sub">DaemonSet · kube-system</div>
@@ -173,7 +167,7 @@
     </div>
 
     
-    <div class="dn" style="left:38px;top:332px;width:144px;" onclick="selectNode('kubelet')">
+    <div class="dn" style="left:38px;top:240px;width:144px;" onclick="selectNode('kubelet')">
       <div class="node-box c-green" id="box-kubelet">
         <div class="node-label">kubelet</div>
         <div class="node-sub">port 10250</div>
@@ -181,7 +175,7 @@
     </div>
 
     
-    <div class="dn" style="left:220px;top:332px;width:158px;" onclick="selectNode('guestnet')">
+    <div class="dn" style="left:210px;top:240px;width:158px;" onclick="selectNode('guestnet')">
       <div class="node-box c-green cloud" id="box-guestnet">
         <div class="node-label">Guest Networks</div>
         <div class="node-sub">pod & service CIDRs</div>
@@ -191,7 +185,7 @@
     
 
     
-    <div class="dn" style="left:470px;top:50px;width:157px;" onclick="selectNode('kas')">
+    <div class="dn" style="left:470px;top:45px;width:157px;" onclick="selectNode('kas')">
       <div class="node-box c-blue" id="box-kas">
         <div class="node-label">kube-apiserver</div>
         <div class="node-sub">port 6443</div>
@@ -199,7 +193,7 @@
     </div>
 
     
-    <div class="dn" style="left:662px;top:50px;width:178px;" onclick="selectNode('ksrv')">
+    <div class="dn" style="left:650px;top:45px;width:185px;" onclick="selectNode('ksrv')">
       <div class="node-box c-teal oval" id="box-ksrv">
         <div class="node-label">konnectivity-server</div>
         <div class="node-sub">sidecar · HTTP-Connect</div>
@@ -207,7 +201,15 @@
     </div>
 
     
-    <div class="dn" style="left:658px;top:200px;width:182px;" onclick="selectNode('k8091')">
+    <div class="dn" style="left:458px;top:168px;width:180px;" onclick="selectNode('k8090')">
+      <div class="node-box c-amber" id="box-k8090">
+        <div class="node-label">Service :8090</div>
+        <div class="node-sub">internal · CP only</div>
+      </div>
+    </div>
+
+    
+    <div class="dn" style="left:650px;top:168px;width:185px;" onclick="selectNode('k8091')">
       <div class="node-box c-amber" id="box-k8091">
         <div class="node-label">Service :8091</div>
         <div class="node-sub">agent registration · external</div>
@@ -215,15 +217,7 @@
     </div>
 
     
-    <div class="dn" style="left:460px;top:282px;width:198px;" onclick="selectNode('k8090')">
-      <div class="node-box c-amber" id="box-k8090">
-        <div class="node-label">Service :8090</div>
-        <div class="node-sub">konnectivity-server-local · internal</div>
-      </div>
-    </div>
-
-    
-    <div class="dn" style="left:460px;top:378px;width:178px;" onclick="selectNode('kagcp')">
+    <div class="dn" style="left:458px;top:278px;width:178px;" onclick="selectNode('kagcp')">
       <div class="node-box c-teal" id="box-kagcp">
         <div class="node-label">konnectivity-agent (CP)</div>
         <div class="node-sub">Deployment · aggregated APIs</div>
@@ -231,7 +225,7 @@
     </div>
 
     
-    <div class="dn" style="left:666px;top:286px;width:168px;" onclick="selectNode('ops')">
+    <div class="dn" style="left:650px;top:278px;width:178px;" onclick="selectNode('ops')">
       <div class="node-box c-purple" id="box-ops">
         <div class="node-label">Operator Pods</div>
         <div class="node-sub">https-proxy / socks5-proxy</div>
