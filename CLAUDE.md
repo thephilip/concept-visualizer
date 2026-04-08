@@ -83,7 +83,7 @@ Before delivering a completed one-pager, confirm:
 
 ## HTML one-pager architecture
 
-Source files in `*/outputs/` reference shared assets via relative paths. The `/visualize compile` command inlines and minifies those assets to produce self-contained files in `build/diagrams/` for GitHub Pages deployment. Do not open source files and expect all features to work — compile first, then open from `build/`.
+Source files in `*/outputs/` reference shared assets via relative paths. The `/visualize compile` command inlines and minifies those assets to produce self-contained files in `docs/diagrams/` for GitHub Pages deployment. Do not open source files and expect all features to work — compile first, then open from `docs/`.
 
 ### Key constraints
 
