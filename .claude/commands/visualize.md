@@ -307,9 +307,39 @@ Extract each `.dn` node's `top` and `width` from inline styles. Estimate height:
 
 If `max(top + estimatedHeight) + 20 > svgHeight`, fix the SVG `height`, `viewBox`, and zone rect heights in the compiled output before writing. Report any corrections made.
 
+### Step 4c: Generate `docs/manifest.json`
+
+After writing all compiled files and `docs/index.html`, generate a machine-readable registry at `docs/manifest.json`.
+
+For each compiled diagram (in the same sort order as the index cards), write one entry:
+
+```json
+{
+  "diagrams": [
+    {
+      "file": "[filename].html",
+      "title": "[cv-title]",
+      "description": "[cv-description]",
+      "platform": "[cv-platform]",
+      "tags": ["tag1", "tag2"],
+      "accent": "[cv-accent]",
+      "source": "[platform]/outputs/[filename].html",
+      "author": "[git log --follow --format='%an' -- [source file] | tail -1]",
+      "compiledAt": "[today's date, YYYY-MM-DD]"
+    }
+  ]
+}
+```
+
+- `file` — filename only (no path), as it appears in `docs/diagrams/`
+- `source` — relative path to the original `*/outputs/` source file
+- `author` — from `git log` on the source file; use `"unknown"` if unavailable
+- `compiledAt` — today's date in `YYYY-MM-DD` format
+- `tags` — array split from the comma-separated `cv-tags` value
+
 ### Step 5: Report
 
-List every file written to `docs/diagrams/`, confirm `docs/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any corrections made by the layout check. List any skipped files.
+List every file written to `docs/diagrams/`, confirm `docs/index.html` and `docs/manifest.json` were written, note the pre/post file sizes if meaningful, and list any corrections made by the layout check or skipped files.
 
 ---
 
