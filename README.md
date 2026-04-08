@@ -1,38 +1,51 @@
 # Concept Visualizer
 
-Interactive, single-page HTML reference documents explaining OpenShift, ARO, ROSA, and OCP architectures for Red Hat TSEs.
+Interactive architecture diagrams for ARO, ROSA, and OCP — built for Technical Support Engineers.
+
+**Live site:** [thephilip.github.io/concept-visualizer](https://thephilip.github.io/concept-visualizer/)
 
 ## What's in here
 
 | Path | Purpose |
 |---|---|
 | `guide.md` | Spec for authoring new one-pagers — read this first |
+| `assets/` | Shared CSS design system and JS (theme toggle, interactivity) |
 | `aro/CLAUDE.md` | ARO platform conventions, known KCS, gotchas |
 | `rosa/CLAUDE.md` | ROSA Classic and HCP conventions, known issues |
 | `ocp/CLAUDE.md` | Self-managed OCP conventions |
-| `{platform}/outputs/` | Rendered HTML one-pagers |
-| `{platform}/sources/` | Markdown source notes — what each one-pager covers and what it was based on |
+| `{platform}/outputs/` | Source HTML one-pagers (reference shared assets) |
+| `{platform}/sources/` | Markdown source notes per one-pager |
+| `docs/` | Compiled, self-contained outputs — served by GitHub Pages |
 
-## Viewing a one-pager
+## Viewing
 
-Download the `.html` file from `outputs/` and open it in any browser. No server needed.
+The live site is at the link above. Individual compiled pages are also fully self-contained and can be downloaded from `docs/diagrams/` and opened in any browser with no server needed.
 
-## Creating a new one-pager with Claude
+## Creating a new one-pager
 
-1. Start a Claude session with this project attached (or paste the relevant files manually)
-2. Claude will read `CLAUDE.md` (router), `guide.md` (spec), and the platform `CLAUDE.md`
-3. Describe the concept you want documented and which platform(s) it applies to
-4. Claude will research using official sources, build the HTML, and create a sources file
+Use the `/visualize` slash command in Claude Code:
 
-See `guide.md` for the full prompt template and authoring spec.
+```
+/visualize [topic description]
+```
+
+Claude will display a help banner, read the spec and platform conventions, research official sources, confirm scope, and build the HTML. You can also **attach a screenshot or existing flowchart** — Claude will use it as the structural basis for the diagram.
+
+Sub-commands:
+
+| Command | What it does |
+|---|---|
+| `/visualize [topic]` | Create a new one-pager |
+| `/visualize compile` | Inline assets, minify, and publish to `docs/` |
+| `/visualize fact-check [file]` | Verify accuracy against official sources |
 
 ## Contributing
 
-- HTML outputs go in `{platform}/outputs/`
-- A corresponding sources file **must** accompany every new output in `{platform}/sources/`
-- Sources files are plain markdown — see an existing one for the format
-- Do not commit one-pagers that cover platform-specific behavior without a scope banner
-- All content must be traceable to an official source (docs.redhat.com, docs.openshift.com, access.redhat.com/solutions/, learn.microsoft.com for ARO)
+- Source HTML goes in `{platform}/outputs/`
+- A corresponding sources file **must** accompany every output in `{platform}/sources/`
+- Do not commit one-pagers with platform-specific content without a scope banner
+- All claims must be traceable to an official source (`docs.redhat.com`, `docs.openshift.com`, `access.redhat.com/solutions/`, `learn.microsoft.com` for ARO)
+- Run `/visualize compile` and commit the updated `docs/` before pushing
 
 ## Current one-pagers
 
@@ -44,7 +57,9 @@ See `guide.md` for the full prompt template and authoring spec.
 
 ### ROSA
 
-*None yet.*
+| File | Topic | Sources |
+|---|---|---|
+| `rosa/outputs/rosa-hcp-network-topology.html` | ROSA HCP cross-account network topology — PrivateLink, egress, Route 53 | `rosa/sources/rosa-hcp-network-topology.md` |
 
 ### OCP
 
@@ -52,4 +67,4 @@ See `guide.md` for the full prompt template and authoring spec.
 
 ## Maintainers
 
-Philip Smith (florida_man) — initial structure and ARO DNS one-pager
+Philip Smith (florida_man) — initial structure and one-pagers
