@@ -295,11 +295,27 @@ If no path is given, check the most recently modified HTML file in any `*/output
 
 Read the specified file. Also read the corresponding sources file in the matching `sources/` directory if it exists.
 
-### Step 2: Extract all factual claims
+### Step 2: Extract all factual claims and links
 
-List every specific factual assertion in the file: component names, behaviors, timeouts, CIDR defaults, CLI flag names, version gates, KCS article numbers and their described content, scope assertions (e.g. "ARO-specific", "does not apply to ROSA"), and any "does not exist on X platform" claims.
+Extract two things:
 
-### Step 3: Verify against official sources
+**Factual claims** — every specific assertion in the file: component names, behaviors, timeouts, CIDR defaults, CLI flag names, version gates, KCS article numbers and their described content, scope assertions (e.g. "ARO-specific", "does not apply to ROSA"), and any "does not exist on X platform" claims.
+
+**All links** — every `href` in the file that points to an external URL (skip `#` anchors and relative paths). List them with their link text.
+
+### Step 3: Verify links
+
+For every external URL extracted in Step 2, fetch it and check whether it returns a successful response (2xx) or an error (4xx, 5xx, redirect to a different page). Report:
+
+| Status | Meaning |
+|---|---|
+| **Live** | URL returns 2xx — include the resolved URL if it redirected |
+| **Redirected** | URL redirected — note the new URL so the source can be updated |
+| **Dead** | URL returns 4xx/5xx — needs replacing |
+
+For dead or redirected links, search official sources to find the correct replacement URL before reporting.
+
+### Step 4: Verify factual claims against official sources
 
 For each claim, search official sources to confirm:
 
@@ -307,9 +323,17 @@ For each claim, search official sources to confirm:
 - Check that cited KCS numbers exist and that the article's content matches what the one-pager claims
 - Check whether version-gated claims are still accurate for the currently supported OCP versions
 
-### Step 4: Report findings
+### Step 5: Report findings
 
-Return a structured report grouped into four categories:
+Return a structured report in two sections:
+
+**Links:**
+
+| URL | Link text | Status | Action |
+|---|---|---|---|
+| ... | ... | Live / Redirected / Dead | Replace with: [new URL] |
+
+**Factual claims** — grouped into four categories:
 
 | Category | Meaning |
 |---|---|
@@ -320,6 +344,6 @@ Return a structured report grouped into four categories:
 
 Do not edit the file until the user approves corrections.
 
-### Step 5: Apply corrections (if approved)
+### Step 6: Apply corrections (if approved)
 
-If the user approves, edit the HTML file to fix any incorrect or outdated claims. Update the corresponding `sources/` file to reflect the changes and note the date re-verified.
+If the user approves, edit the HTML file to fix any dead links, incorrect claims, or outdated content. Update the corresponding `sources/` file to reflect the changes and note the date re-verified.
