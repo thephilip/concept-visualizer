@@ -34,9 +34,9 @@ Claude will display a help banner, read the spec and platform conventions, resea
 
 | Command | What it does |
 |---|---|
-| `/visualize [topic]` | Create a new one-pager |
-| `/visualize compile` | Inline assets, minify, and publish to `docs/` |
-| `/visualize fact-check [file]` | Verify accuracy and check for dead links |
+| `/visualize [topic]` | Create a new one-pager — auto fact-checks before delivering |
+| `/visualize compile` | Fact-checks new/modified files, then publishes to `docs/` |
+| `/visualize fact-check [file]` | Manually verify an existing page — parallel link check + factual claims |
 
 ## Platform routing
 

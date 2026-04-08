@@ -181,8 +181,8 @@
         </div>
         <div class="modal-section">
           <h3>Verifying accuracy</h3>
-          <p>Diagrams can go stale as products evolve. Before citing content in a support case, run <code>/visualize fact-check [file]</code> in Claude Code to verify all factual claims and links against official sources.</p>
-          <p>It will flag anything that's outdated, dead-linked, or unverifiable and suggest corrections.</p>
+          <p>Diagrams can go stale as products evolve. Run <code>/visualize fact-check [file]</code> in Claude Code to verify all factual claims and check every link against official sources.</p>
+          <p>Links are verified in parallel when there are more than 5 — it will flag anything outdated, dead-linked, or unverifiable and suggest corrections. Fact-check also runs automatically whenever a new diagram is built or compiled.</p>
         </div>
         <div class="modal-section">
           <h3>Theme</h3>
@@ -212,11 +212,12 @@
         </div>
         <div class="modal-section">
           <h3>Verify accuracy before publishing</h3>
-          <p>Run <code>/visualize fact-check [file]</code> before compiling. It checks every factual claim and external link against official sources and reports anything outdated, dead-linked, or unverifiable.</p>
+          <p>Fact-check runs <strong>automatically</strong> after every new diagram is built — no manual step needed. It verifies all external links (in parallel when there are more than 5) and checks factual claims against official sources. Any dead links or incorrect claims must be resolved before the diagram is delivered.</p>
+          <p>You can also run it manually at any time: <code>/visualize fact-check [file]</code></p>
         </div>
         <div class="modal-section">
           <h3>Publish to this site</h3>
-          <p>Once your diagram passes fact-check, run <code>/visualize compile</code> to inline all assets and update the <code>docs/</code> directory, then push to GitHub.</p>
+          <p>Run <code>/visualize compile</code> — it fact-checks any new or changed files first, then inlines all assets and updates the <code>docs/</code> directory. Push to GitHub to deploy.</p>
         </div>
       </div>
 
