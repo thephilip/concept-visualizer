@@ -12,9 +12,9 @@ The `/visualize` slash command is the standard entry point for all one-pager wor
 
 | Invocation | What it does |
 |---|---|
-| `/visualize` or `/visualize [topic]` | Create a new one-pager — reads spec, researches, confirms scope, builds HTML |
-| `/visualize build` | Compile all `*/outputs/*.html` into `build/` for GitHub Pages deployment |
-| `/visualize fact-check [path]` | Verify accuracy of an existing one-pager against official sources |
+| `/visualize` or `/visualize [topic]` | Create a new one-pager — reads spec, researches, builds HTML, then **auto-runs fact-check** before delivering |
+| `/visualize compile` | Fact-checks new/modified files, then inlines assets and publishes to `docs/` |
+| `/visualize fact-check [path]` | Manually verify an existing one-pager — checks links (parallel sub-agent if > 5) and factual claims against official sources |
 
 The full instructions for each mode are in `.claude/commands/visualize.md`. Read that file when running the command — do not reconstruct the workflow from memory.
 
