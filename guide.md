@@ -149,7 +149,10 @@ For diagrams with more than ~5 nodes, cross-zone connections, bidirectional flow
 .dn { position: absolute; cursor: pointer; transition: transform 0.15s; }
 .dn:hover { transform: translateY(-2px); }
 .dn:hover .node-box { border-color: var(--border-hi); }
-.dn .node-box { width: 100%; min-width: unset; }
+.dn .node-box   { width: 100%; min-width: unset; }
+/* Fixed-width nodes must allow wrapping — shared CSS uses white-space:nowrap */
+.dn .node-label { white-space: normal; }
+.dn .node-sub   { white-space: normal; }
 ```
 
 **Calculating diagram height — do this before writing the file:**
