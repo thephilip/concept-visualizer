@@ -18,19 +18,25 @@
 <link rel="stylesheet" href="../../assets/style.css">
 <style>
   /* SVG-based diagram overrides */
+  /* SVG is a block element — its height defines the container height naturally.
+     Nodes sit in an absolute overlay layer on top of the SVG.
+     To set the diagram height: adjust the SVG height attribute + viewBox only. */
   .diagram-wrap {
     position: relative;
-    height: 360px;
     min-width: 900px;
-    overflow-x: auto;
   }
   .diagram-svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 900px; height: 360px;
+    display: block;
     pointer-events: none;
     overflow: visible;
   }
+  .dn-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .dn-layer .dn { pointer-events: all; }
   .dn {
     position: absolute;
     cursor: pointer;
@@ -80,7 +86,7 @@
   <div class="diagram-wrap">
 
     <!-- ── SVG layer: zone backgrounds, connections, labels ── -->
-    <svg class="diagram-svg" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+    <svg class="diagram-svg" width="900" height="420" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="ah-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(20,184,166,0.85)"/>
@@ -99,10 +105,10 @@
         </marker>
       </defs>
 
-      <!-- Zone backgrounds -->
-      <rect x="10" y="28" width="420" height="314" rx="10"
+      <!-- Zone backgrounds — height = SVG height - 30px top offset -->
+      <rect x="10" y="28" width="420" height="382" rx="10"
         fill="rgba(74,222,128,0.025)" stroke="rgba(74,222,128,0.18)" stroke-width="1"/>
-      <rect x="450" y="28" width="440" height="314" rx="10"
+      <rect x="450" y="28" width="440" height="382" rx="10"
         fill="rgba(59,130,246,0.025)" stroke="rgba(59,130,246,0.18)" stroke-width="1"/>
 
       <!-- Zone labels -->
@@ -156,7 +162,8 @@
         marker-end="url(#ah-teal)"/>
     </svg>
 
-    <!-- ── DATA PLANE NODES ── -->
+    <!-- ── Node overlay layer — sits on top of SVG ── -->
+    <div class="dn-layer">
 
     <!-- konnectivity-agent (data plane) — moved up to reduce dead space -->
     <div class="dn" style="left:60px;top:70px;width:182px;" onclick="selectNode('kagt')">
@@ -237,6 +244,7 @@
       </div>
     </div>
 
+    </div><!-- end dn-layer -->
   </div><!-- end diagram-wrap -->
 </div><!-- end flow-wrap -->
 

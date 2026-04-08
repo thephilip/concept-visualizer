@@ -108,6 +108,24 @@ Follow `guide.md` exactly. Key constraints:
 
 Choose `cv-accent` to match the dominant color of the diagram's main flow nodes.
 
+### Step 4b: Layout verification (SVG diagrams only)
+
+Before saving, verify that no node overflows the diagram bounds.
+
+For each `.dn` node, extract `top` and `width` from its inline `style`. Estimate rendered height:
+- Standard node (label + sub): **55px**
+- Oval node: **50px**
+- Node with a nested list (`.op-list`, extra content beyond label+sub): **120px**
+
+Calculate: `requiredHeight = max(top + estimatedHeight) + 20`
+
+Compare to the SVG `height` attribute. If `requiredHeight > svgHeight`:
+1. Update the SVG `height` attribute and `viewBox` height to `requiredHeight`
+2. Update zone background rect heights to `requiredHeight - 30`
+3. Fix the diagram before saving — do not leave overflow in place
+
+Report the layout check result: list each node's `top + estimatedHeight` and confirm the SVG height is sufficient.
+
 ### Step 5: Save files
 
 - **HTML** → correct platform `outputs/` directory  
@@ -280,9 +298,18 @@ And add a theme toggle button in the site header:
 
 Inline `assets/theme.js` at the end of `<body>` in the index as well (only the theme toggle portion — omit `selectNode` which is for one-pagers only).
 
+### Step 4b: Layout verification (SVG diagrams)
+
+Before writing each compiled file, check for node overflow. For any source file containing `.dn-layer`:
+
+Extract each `.dn` node's `top` and `width` from inline styles. Estimate height:
+- Standard node: **55px** · Oval: **50px** · Node with extra content (`.op-list` or similar): **120px**
+
+If `max(top + estimatedHeight) + 20 > svgHeight`, fix the SVG `height`, `viewBox`, and zone rect heights in the compiled output before writing. Report any corrections made.
+
 ### Step 5: Report
 
-List every file written to `docs/diagrams/`, confirm `docs/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any skipped files.
+List every file written to `docs/diagrams/`, confirm `docs/index.html` was written, and note the pre/post file sizes if the reduction is meaningful. List any corrections made by the layout check. List any skipped files.
 
 ---
 
