@@ -303,7 +303,7 @@ Inline `assets/theme.js` at the end of `<body>` in the index as well (only the t
 Before writing each compiled file, check for node overflow. For any source file containing `.dn-layer`:
 
 Extract each `.dn` node's `top` and `width` from inline styles. Estimate height:
-- Standard node: **55px** · Oval: **50px** · Node with extra content (`.op-list` or similar): **130px**
+- Standard node (label + 1-line sub): **60px** · Oval: **55px** · Node with extra content (`.op-list` with 3 entries): **180px**
 
 If `max(top + estimatedHeight) + 20 > svgHeight`, fix the SVG `height`, `viewBox`, and zone rect heights in the compiled output before writing. Report any corrections made.
 
