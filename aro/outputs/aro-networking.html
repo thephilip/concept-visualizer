@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="cv-title" content="ARO Networking">
+<meta name="cv-description" content="Azure Red Hat OpenShift networking components — Public LB, Internal LB, NSG, Private Link, and OVN-Kubernetes overlay. Covers egress SNAT limits, NSG immutability, and API/Ingress visibility settings.">
+<meta name="cv-platform" content="ARO">
+<meta name="cv-tags" content="ARO,Networking,Load Balancer,NSG,Azure,Egress">
+<meta name="cv-accent" content="amber">
+<title>ARO Networking</title>
+<script>
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
+
+<div class="page-header">
+  <div class="page-title">ARO Networking</div>
+  <div class="page-subtitle">Load balancers, NSG, Private Link, and egress — how traffic enters and leaves an ARO cluster.</div>
+</div>
+
+<div class="scope-banner">
+  <span>⚠</span>
+  <span><strong>ARO-specific.</strong> The load balancer names (<code>aro</code>, <code>aro-internal</code>, <code>aro-pls</code>, <code>aro-nsg</code>), NSG immutability, and egress SNAT behavior described here are specific to Azure Red Hat OpenShift. ROSA and self-managed OCP on AWS/GCP have different networking architectures.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Kubernetes / OCP layer</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> Azure infrastructure / cloud service</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Managed / SRE-only access</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> External internet</div>
+</div>
+
+<div class="flow-wrap">
+  <p class="hint">Click any component to see details</p>
+  <div class="flow">
+
+    <div class="node" onclick="selectNode('pod')">
+      <div class="node-box c-blue" id="box-pod">
+        <div class="node-label">Pod</div>
+        <div class="node-sub">worker node · /23 subnet</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">overlay</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('ovnk')">
+      <div class="node-box c-blue oval" id="box-ovnk">
+        <div class="node-label">OVN-Kubernetes</div>
+        <div class="node-sub">CNI · pod network</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">subnet egress</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('nsg')">
+      <div class="node-box c-amber hexagon-like" id="box-nsg">
+        <div class="node-label">aro-nsg</div>
+        <div class="node-sub">immutable · subnet-level</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">ingress / egress</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('publb')">
+      <div class="node-box c-amber cloud" id="box-publb">
+        <div class="node-label">Public LB · aro</div>
+        <div class="node-sub">egress SNAT · public ingress · API</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">public traffic</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('internet')">
+      <div class="node-box c-green cloud" id="box-internet">
+        <div class="node-label">Internet</div>
+        <div class="node-sub">ingress · egress · Azure RM</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Internal LB branch — drops below aro-nsg -->
+  <div style="display:flex;align-items:flex-start;margin-top:28px;min-width:900px;padding-left:358px;gap:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:1px;height:28px;background:var(--border-hi);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-hi);margin-bottom:2px;"></div>
+    </div>
+    <div style="width:44px;height:1px;background:var(--border-hi);margin-top:35px;"></div>
+    <div class="node" onclick="selectNode('intlb')" style="margin-top:14px;">
+      <div class="node-box c-amber cloud" id="box-intlb">
+        <div class="node-label">Internal LB · aro-internal</div>
+        <div class="node-sub">on-demand · private ingress</div>
+      </div>
+    </div>
+    <div style="padding-left:16px;padding-top:18px;font-size:10px;color:var(--text-dim);line-height:1.7;max-width:280px;">
+      <span style="color:var(--red);">Not created by default</span> — only provisioned when a <code style="color:var(--amber);font-size:10px;">LoadBalancer</code> service with annotation <code style="color:var(--amber);font-size:10px;">azure-load-balancer-internal: "true"</code> is deployed
+    </div>
+  </div>
+
+  <!-- Private Link branch — drops below Public LB -->
+  <div style="display:flex;align-items:flex-start;margin-top:20px;min-width:900px;padding-left:580px;gap:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:1px;height:28px;background:var(--border-hi);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-hi);margin-bottom:2px;"></div>
+    </div>
+    <div style="width:44px;height:1px;background:var(--border-hi);margin-top:35px;"></div>
+    <div class="node" onclick="selectNode('pls')" style="margin-top:14px;">
+      <div class="node-box c-purple cloud" id="box-pls">
+        <div class="node-label">Private Link · aro-pls</div>
+        <div class="node-sub">SRE management only</div>
+      </div>
+    </div>
+    <div style="padding-left:16px;padding-top:18px;font-size:10px;color:var(--text-dim);line-height:1.7;max-width:220px;">
+      Used by Microsoft &amp; Red Hat SRE — not for customer traffic · cannot be disabled
+    </div>
+  </div>
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">
+    ← Select a component above to see notes, gotchas, and relevant config.
+  </div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<!-- Reference cards -->
+<div class="ref-grid">
+
+  <div class="ref-card">
+    <div class="ref-card-title">Default Network CIDRs</div>
+    <div class="ref-item"><span class="ref-item-label">Pod CIDR</span><span class="ref-item-val"><code>10.128.0.0/14</code> (minimum /18)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Service CIDR</span><span class="ref-item-val"><code>172.30.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Per-node pod subnet</span><span class="ref-item-val"><code>/23</code> — 512 IPs, non-changeable</span></div>
+    <div class="ref-item"><span class="ref-item-label">Node/CP subnets</span><span class="ref-item-val">Minimum <code>/27</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Multi-network</span><span class="ref-item-val"><span class="warn">Not supported — one network per pod</span></span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Egress &amp; SNAT</div>
+    <div class="ref-item"><span class="ref-item-label">SNAT ports / node</span><span class="ref-item-val"><span class="warn">1,024 TCP ports — non-configurable</span></span></div>
+    <div class="ref-item"><span class="ref-item-label">Egress IP</span><span class="ref-item-val">Any public IP on the ALB (non-deterministic)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Add SNAT ports</span><span class="ref-item-val">Add public LoadBalancer-type services</span></div>
+    <div class="ref-item"><span class="ref-item-label">Egress IPs (OVN-K)</span><span class="ref-item-val">Configurable on private clusters with OVN-K</span></div>
+    <div class="ref-item"><span class="ref-item-label">Egress firewall</span><span class="ref-item-val">1 policy per namespace, not on "default"</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">API &amp; Ingress Visibility</div>
+    <div class="ref-item"><span class="ref-item-label">API — Public</span><span class="ref-item-val">Accessible from external networks via Public LB</span></div>
+    <div class="ref-item"><span class="ref-item-label">API — Private</span><span class="ref-item-val">Private IP in control plane subnet only</span></div>
+    <div class="ref-item"><span class="ref-item-label">Ingress — Public</span><span class="ref-item-val">Routes via public Standard LB (default)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Ingress — Private</span><span class="ref-item-val">Routes via internal LB (default can change)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Set at</span><span class="ref-item-val"><code>az aro create</code> time</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Quick Diagnostics</div>
+    <div class="ref-item"><span class="ref-item-label">List LBs</span><span class="ref-item-val"><code>az network lb list -g &lt;managed-rg&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Cluster network</span><span class="ref-item-val"><code>oc get network.config/cluster -o yaml</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Node CIDRs</span><span class="ref-item-val"><code>oc get nodes -o wide</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">NSG rules</span><span class="ref-item-val"><code>az network nsg list -g &lt;managed-rg&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">CNI plugin</span><span class="ref-item-val"><code>oc get network.operator/cluster -o yaml</code></span></div>
+  </div>
+
+</div>
+
+<div class="kcs-bar">
+  <span>References</span>
+  <div class="kcs-links">
+    <a href="https://learn.microsoft.com/en-us/azure/openshift/concepts-networking" target="_blank">MS Learn — ARO Networking Concepts ↗</a>
+    <a href="./aro-dns-flow.html" target="_blank">ARO DNS Flow (companion diagram) ↗</a>
+  </div>
+</div>
+
+<script>
+const nodeData = {
+  pod: {
+    dotClass: 'c-blue', title: 'Pod',
+    cards: [
+      { title: 'Network allocation', body: `Each node is allocated a <code>/23</code> subnet (512 IPs) for its pods. <span class="warn">This value cannot be changed after cluster creation.</span> Pod IPs are non-routable and only used inside the cluster overlay network.` },
+      { title: 'Pod CIDR', body: `Default pod CIDR is <code>10.128.0.0/14</code>. Must be a minimum of <code>/18</code> in size. Must not overlap with the VNet IP range, service CIDR, or any other address ranges in use on your network.` },
+      { title: 'No multi-network', body: `<span class="warn">You cannot attach a pod to multiple networks.</span> Each pod has a single network interface on the pod overlay. If multi-network is required, evaluate additional networking operators.` },
+      { title: 'Egress path', body: `All pod egress traffic leaves via OVN-Kubernetes, traverses the NSG subnet boundary, and exits via the Public LB (aro) using Azure SNAT. The egress IP is non-deterministic — see Public LB gotchas.` },
+    ]
+  },
+  ovnk: {
+    dotClass: 'c-blue', title: 'OVN-Kubernetes',
+    cards: [
+      { title: 'Role', body: `The CNI (Container Network Interface) overlay network for the cluster. Manages all pod-to-pod and pod-to-service communication. No extra routes are needed in the VNet for pod communication — the overlay handles it entirely.` },
+      { title: 'SDN migration note', body: `Older ARO clusters may still be running OpenShift SDN. Migration to OVN-Kubernetes occurs during OCP version upgrades. <span class="warn">Do not remove the SDN-to-OVN migration annotation prematurely — doing so can leave the cluster in an unrecoverable state.</span>` },
+      { title: 'Egress firewall', body: `OVN-Kubernetes supports egress firewall policies (one per namespace). Egress policies are <span class="warn">not supported on the "default" namespace</span> and are evaluated in order (first matching rule wins). On private clusters with OVN-K, egress IPs are configurable.` },
+      { title: 'Ingress NetworkPolicy', body: `V1 NetworkPolicy is supported for ingress. <span class="warn">Egress and IPBlock types in NetworkPolicy are not supported</span> on SDN-based clusters. OVN-K provides broader NetworkPolicy support for newer clusters.` },
+    ]
+  },
+  nsg: {
+    dotClass: 'c-amber', title: 'aro-nsg (Network Security Group)',
+    cards: [
+      { title: 'Role', body: `Azure Network Security Group (NSG) assigned to both control plane and worker subnets. Controls all inbound and outbound traffic at the subnet level. When you expose a Kubernetes service, ARO automatically creates NSG rules to allow traffic through port <code>6443</code> and application ports.` },
+      { title: 'Immutable — critical gotcha', body: `<span class="warn">The NSG is created in the ARO managed resource group, which is locked via Azure deny assignments. Users have no permissions to modify the NSG.</span> Any attempt to change it will be denied. SRE intervention is required for changes.` },
+      { title: 'Subnet-level, not NIC-level', body: `NSGs are assigned directly to subnets, not to individual node NICs. <span class="warn">With a public API server, you cannot create custom NSGs and assign them to NICs.</span> This is an Azure-level restriction on ARO clusters.` },
+      { title: 'Default outbound behavior', body: `By default the NSG allows all outbound traffic. Currently, outbound traffic can only be restricted to the ARO control plane. If you need to restrict egress more broadly, consider using an Azure Firewall or NVA in conjunction with UDRs (User Defined Routes).` },
+    ]
+  },
+  publb: {
+    dotClass: 'c-amber', title: 'Public LB · aro',
+    cards: [
+      { title: 'Three responsibilities', body: `The <code>aro</code> public load balancer handles: (1) public application ingress via routes and services, (2) API server traffic if API visibility is Public, (3) egress internet connectivity for all worker pods via Azure LB outbound rules.` },
+      { title: 'Egress SNAT limit — gotcha', body: `<span class="warn">Outbound rules allocate 1,024 TCP ports per node. This is not configurable.</span> At scale, this can cause SNAT exhaustion — connections fail with timeout when all ports are used. The only way to add ephemeral SNAT ports is by adding public LoadBalancer-type services to the cluster.` },
+      { title: 'Non-deterministic egress IP', body: `<span class="warn"><code>DisableOutboundSnat</code> is not configured in the LB rules, so pods could use any public IP configured on the ALB as their egress IP.</span> This breaks IP allowlisting on external services. Use egress IPs (OVN-K, private clusters) or an Azure NAT Gateway for deterministic egress.` },
+      { title: 'Control plane dependency', body: `The control plane uses this load balancer to reach Azure Resource Manager and report cluster health. Blocking egress from this LB can prevent the ARO RP from receiving health signals, potentially triggering SRE alerts.` },
+    ]
+  },
+  internet: {
+    dotClass: 'c-green', title: 'Internet',
+    cards: [
+      { title: 'Ingress path', body: `External traffic → Internet → Public LB (aro) → NSG → OVN-Kubernetes → Pod. For routes and Ingress resources, the public LB handles load balancing to router pods, which forward to application pods.` },
+      { title: 'Egress path', body: `Pod → OVN-Kubernetes overlay → NSG subnet boundary → Public LB (aro) → Internet via Azure SNAT. Control planes also use this path to reach Azure Resource Manager.` },
+      { title: 'API visibility', body: `<strong>Public:</strong> API server is accessible from external networks via the public LB — <code>api.&lt;cluster&gt;.&lt;domain&gt;</code> resolves to the LB public IP.<br><strong>Private:</strong> API server gets a private IP in the control plane subnet, reachable only from connected networks.` },
+      { title: 'Ingress visibility', body: `<strong>Public:</strong> Application routes use the public Standard LB (default, can be changed).<br><strong>Private:</strong> Application routes use the internal LB (default, can be changed). Both settings are configured at <code>az aro create</code> time but can be modified afterwards per-IngressController.` },
+    ]
+  },
+  intlb: {
+    dotClass: 'c-amber', title: 'Internal LB · aro-internal',
+    cards: [
+      { title: 'Not created by default', body: `<span class="warn">The <code>aro-internal</code> load balancer does not exist until you deploy a Kubernetes service of type <code>LoadBalancer</code> with the annotation <code>service.beta.kubernetes.io/azure-load-balancer-internal: "true"</code>.</span> It is created on demand by the cloud-controller-manager.` },
+      { title: 'Backend pool', body: `Both control plane nodes and worker nodes are in the backend pool of <code>aro-internal</code>. This allows it to serve both internal service traffic and (when API visibility is Private) the Kubernetes API server.` },
+      { title: 'Private API use case', body: `If <strong>API Visibility</strong> is set to <code>Private</code> at cluster creation, the API server traffic is routed through <code>aro-internal</code> instead of the public LB. The API endpoint resolves to a private IP within the control plane subnet.` },
+      { title: 'Private Ingress use case', body: `If <strong>Ingress Visibility</strong> is set to <code>Private</code>, application routes default to the internal LB. This is appropriate for clusters that should not expose applications to the public internet. The default can be changed per-IngressController after creation.` },
+    ]
+  },
+  pls: {
+    dotClass: 'c-purple', title: 'Private Link · aro-pls',
+    cards: [
+      { title: 'SRE management only', body: `The <code>aro-pls</code> Azure Private Link endpoint is used exclusively by Microsoft and Red Hat Site Reliability Engineers to manage the cluster. It is not used for customer application traffic and provides no customer-accessible endpoint.` },
+      { title: 'Cannot be disabled', body: `<span class="warn">Customers cannot block or disable the Private Link endpoint.</span> It is a required component of the managed service. This is how Red Hat and Microsoft SREs respond to alerts, perform health checks, and conduct incident response.` },
+      { title: 'Network isolation', body: `The <code>aro-pls</code> endpoint is only accessible from the ARO management plane network operated by Red Hat and Microsoft. It does not expose the cluster to the public internet. Traffic through this endpoint is logged for audit purposes.` },
+      { title: 'Managed resource group', body: `Like the NSG, the Private Link endpoint lives in the ARO managed resource group and is subject to Azure deny assignments. Customers cannot modify, move, or delete it. Any changes require SRE coordination.` },
+    ]
+  },
+};
+</script>
+<script src="../../assets/theme.js"></script>
+</body>
+</html>

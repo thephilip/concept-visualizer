@@ -17,6 +17,24 @@
       "compiledAt": "2026-04-08"
     },
     {
+      "file": "aro-networking.html",
+      "title": "ARO Networking",
+      "description": "Azure Red Hat OpenShift networking components \u2014 Public LB, Internal LB, NSG, Private Link, and OVN-Kubernetes overlay. Covers egress SNAT limits, NSG immutability, and API/Ingress visibility settings.",
+      "platform": "ARO",
+      "tags": [
+        "ARO",
+        "Networking",
+        "Load Balancer",
+        "NSG",
+        "Azure",
+        "Egress"
+      ],
+      "accent": "amber",
+      "source": "aro/outputs/aro-networking.html",
+      "author": "unknown",
+      "compiledAt": "2026-04-08"
+    },
+    {
       "file": "rosa-hcp-networking.html",
       "title": "ROSA HCP Networking",
       "description": "Cross-account architecture showing how the hosted control plane connects to customer worker nodes via AWS PrivateLink, including DNS, egress, and account boundary details.",
