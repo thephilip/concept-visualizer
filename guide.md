@@ -119,7 +119,55 @@ Colors encode **semantic meaning**, not sequence. Blue = Kubernetes/OCP layer. T
 
 ---
 
-### Flow diagram nodes
+### SVG-based diagrams (complex topologies)
+
+For diagrams with more than ~5 nodes, cross-zone connections, bidirectional flows, or 2D layouts that don't fit a single horizontal row, use the SVG overlay approach instead of CSS flexbox arrows.
+
+**Structure:**
+```html
+<div class="diagram-wrap">
+  <!-- SVG defines container height via its height attribute -->
+  <svg class="diagram-svg" width="900" height="[H]" viewBox="0 0 900 [H]">
+    <!-- zone backgrounds, connection paths, labels -->
+  </svg>
+  <!-- Nodes overlay the SVG absolutely -->
+  <div class="dn-layer">
+    <div class="dn" style="left:[x]px;top:[y]px;width:[w]px;" onclick="selectNode('id')">
+      <div class="node-box c-[color]" id="box-id">...</div>
+    </div>
+    ...
+  </div>
+</div>
+```
+
+**Required CSS (add in a `<style>` block in `<head>` alongside the shared asset link):**
+```css
+.diagram-wrap { position: relative; min-width: 900px; }
+.diagram-svg  { display: block; pointer-events: none; overflow: visible; }
+.dn-layer     { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+.dn-layer .dn { pointer-events: all; }
+.dn { position: absolute; cursor: pointer; transition: transform 0.15s; }
+.dn:hover { transform: translateY(-2px); }
+.dn:hover .node-box { border-color: var(--border-hi); }
+.dn .node-box { width: 100%; min-width: unset; }
+```
+
+**Calculating diagram height — do this before writing the file:**
+
+For each node, estimate its rendered height:
+- Standard node (label + sub only): **~55px**
+- Node with `oval` shape: **~50px**
+- Node with a nested list (e.g. `.op-list` with 3 lines): **~120px**
+
+Required height = `max(top + estimatedHeight)` across all nodes, **+ 20px bottom padding**.
+
+Set `height="[H]"` and `viewBox="0 0 900 [H]"` on the SVG. Zone background rects use `height = H - 30`.
+
+**Do not use a fixed `height` on `.diagram-wrap`** — the SVG block element sets the container height automatically and grows with content.
+
+---
+
+### Flow diagram nodes (simple linear flows)
 
 Each node is a `<div class="node">` wrapping a `<div class="node-box c-{color}">` with:
 - `.node-label` — component name, 12px bold, `white-space: nowrap`
