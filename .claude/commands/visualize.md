@@ -239,6 +239,8 @@ For each card:
 
 Replace `GITHUB_REPO` with the actual `owner/repo` path. If the git remote is already set, read it with `git remote get-url origin` and extract the owner/repo.
 
+**Important:** The index template also includes a help modal (Using / Creating / Contributing tabs) and updated header layout. When regenerating `docs/index.html`, read the current `docs/index.html` and preserve the modal HTML, CSS, and JS exactly — only update the card grid contents. Do not reconstruct the modal from scratch.
+
 ### Step 4: Report
 
 List every file copied to `docs/diagrams/`, confirm `docs/index.html` was written, and show the card titles that were generated. If any `*/outputs/*.html` files were skipped due to missing `cv-*` tags, list them so the user can fix them.
