@@ -154,6 +154,11 @@
           <p><strong>Reference cards</strong> below the diagram cover timing, config commands, platform-specific facts, and diagnostics at a glance.</p>
         </div>
         <div class="modal-section">
+          <h3>Verifying accuracy</h3>
+          <p>Diagrams can go stale as products evolve. Before citing content in a support case, run <code>/visualize fact-check [file]</code> in Claude Code to verify all factual claims and links against official sources.</p>
+          <p>It will flag anything that's outdated, dead-linked, or unverifiable and suggest corrections.</p>
+        </div>
+        <div class="modal-section">
           <h3>Theme</h3>
           <p>Use the <strong>☾ Dark / ☀ Light</strong> toggle in the top-right corner. Your preference is saved across sessions.</p>
         </div>
@@ -180,8 +185,12 @@
           <p><code>aro/</code> — ARO Classic &nbsp;·&nbsp; <code>hcp/</code> — ROSA HCP, ARO HCP, HyperShift &nbsp;·&nbsp; <code>rosa/</code> — ROSA Classic &nbsp;·&nbsp; <code>ocp/</code> — Self-managed OCP</p>
         </div>
         <div class="modal-section">
+          <h3>Verify accuracy before publishing</h3>
+          <p>Run <code>/visualize fact-check [file]</code> before compiling. It checks every factual claim and external link against official sources and reports anything outdated, dead-linked, or unverifiable.</p>
+        </div>
+        <div class="modal-section">
           <h3>Publish to this site</h3>
-          <p>Once your diagram is complete, run <code>/visualize compile</code> to inline all assets and update the <code>docs/</code> directory, then push to GitHub.</p>
+          <p>Once your diagram passes fact-check, run <code>/visualize compile</code> to inline all assets and update the <code>docs/</code> directory, then push to GitHub.</p>
         </div>
       </div>
 
