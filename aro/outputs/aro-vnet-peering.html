@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="cv-title" content="ARO VNet Peering">
+<meta name="cv-description" content="Azure Virtual Network peering in a hub-and-spoke topology — NVA-based egress, gateway transit, remote gateway, and UDRs as commonly deployed with ARO clusters.">
+<meta name="cv-platform" content="ARO">
+<meta name="cv-tags" content="ARO,Networking,VNet Peering,Azure,Hub-and-Spoke,NVA">
+<meta name="cv-accent" content="amber">
+<title>ARO VNet Peering</title>
+<script>
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<link rel="stylesheet" href="../../assets/style.css">
+<style>
+  .diagram-wrap { position: relative; min-width: 900px; }
+  .diagram-svg  { display: block; pointer-events: none; overflow: visible; }
+  .dn-layer     { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .dn-layer .dn { pointer-events: all; }
+  .dn           { position: absolute; cursor: pointer; transition: transform 0.15s; }
+  .dn:hover     { transform: translateY(-2px); }
+  .dn:hover .node-box { border-color: var(--border-hi); }
+  .dn .node-box { width: 100%; min-width: unset; }
+  .dn .node-label { white-space: normal; }
+  .dn .node-sub   { white-space: normal; }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
+
+<div class="page-header">
+  <div class="page-title">ARO VNet Peering</div>
+  <div class="page-subtitle">Hub-and-spoke topology — NVA egress inspection, gateway transit, and UDR routing as deployed with ARO clusters.</div>
+</div>
+
+<div class="scope-banner">
+  <span>⚠</span>
+  <span><strong>ARO context.</strong> VNet peering is a generic Azure feature. This diagram covers the hub-and-spoke topology as commonly deployed with ARO — including UDR impact on cluster egress, ARO CIDR overlap constraints, and gateway transit for on-premises connectivity.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Customer VNets (spoke)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> Azure hub infrastructure</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Customer-managed / on-premises</div>
+</div>
+
+<div class="flow-wrap" style="padding:20px 20px 24px;height:auto;">
+  <p class="hint" style="margin-bottom:14px;">Click any component to see details</p>
+  <div class="diagram-wrap">
+
+    <svg class="diagram-svg" width="900" height="420" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(20,184,166,0.85)"/>
+        </marker>
+        <marker id="ah-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(245,158,11,0.85)"/>
+        </marker>
+        <marker id="ah-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(167,139,250,0.85)"/>
+        </marker>
+      </defs>
+
+      <!-- Zone: Spoke VNet A -->
+      <rect x="10" y="93" width="205" height="145" rx="8"
+        fill="rgba(59,130,246,0.03)" stroke="rgba(59,130,246,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- Zone: Hub VNet -->
+      <rect x="255" y="35" width="390" height="360" rx="10"
+        fill="rgba(245,158,11,0.03)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+
+      <!-- Zone: Spoke VNet B -->
+      <rect x="685" y="93" width="205" height="145" rx="8"
+        fill="rgba(59,130,246,0.03)" stroke="rgba(59,130,246,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- Zone labels -->
+      <text x="112" y="28" text-anchor="middle" font-size="9" font-weight="600"
+        letter-spacing="0.08em" fill="rgba(59,130,246,0.5)"
+        font-family="'SF Mono','Fira Code',ui-monospace,monospace">VNET A · 10.1.0.0/16</text>
+      <text x="450" y="28" text-anchor="middle" font-size="9" font-weight="600"
+        letter-spacing="0.08em" fill="rgba(245,158,11,0.55)"
+        font-family="'SF Mono','Fira Code',ui-monospace,monospace">HUB VNET · 10.3.0.0/16</text>
+      <text x="787" y="28" text-anchor="middle" font-size="9" font-weight="600"
+        letter-spacing="0.08em" fill="rgba(59,130,246,0.5)"
+        font-family="'SF Mono','Fira Code',ui-monospace,monospace">VNET B · 10.2.0.0/16</text>
+
+      <!-- A: VNet A ↔ Hub (peering + UDR) — bidirectional teal curved -->
+      <path d="M 200,175 C 228,175 248,115 278,115"
+        stroke="rgba(20,184,166,0.6)" stroke-width="2" fill="none"
+        marker-start="url(#ah-teal)" marker-end="url(#ah-teal)"/>
+      <text x="228" y="128" text-anchor="middle" font-size="8"
+        fill="rgba(20,184,166,0.65)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">Peering · UDR</text>
+
+      <!-- B: VNet B ↔ Hub (peering + remote gateway) — bidirectional teal curved -->
+      <path d="M 700,175 C 672,175 652,115 623,115"
+        stroke="rgba(20,184,166,0.6)" stroke-width="2" fill="none"
+        marker-start="url(#ah-teal)" marker-end="url(#ah-teal)"/>
+      <text x="672" y="128" text-anchor="middle" font-size="8"
+        fill="rgba(20,184,166,0.65)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">Peering · Remote GW</text>
+
+      <!-- C: NVA → VPN Gateway (service chaining) -->
+      <path d="M 433,115 L 468,115"
+        stroke="rgba(245,158,11,0.6)" stroke-width="1.5" fill="none"
+        marker-end="url(#ah-amber)"/>
+      <text x="450" y="107" text-anchor="middle" font-size="8"
+        fill="rgba(245,158,11,0.55)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">chain</text>
+
+      <!-- D: VPN Gateway → On-premises -->
+      <path d="M 547,143 L 547,278"
+        stroke="rgba(167,139,250,0.6)" stroke-width="1.5" fill="none"
+        marker-end="url(#ah-purple)"/>
+      <text x="560" y="215" font-size="8"
+        fill="rgba(167,139,250,0.6)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">VPN / ExpressRoute</text>
+
+      <!-- AllowGatewayTransit label near VPN GW -->
+      <text x="547" y="165" text-anchor="middle" font-size="7.5"
+        fill="rgba(245,158,11,0.45)" font-family="'SF Mono','Fira Code',ui-monospace,monospace">AllowGatewayTransit</text>
+    </svg>
+
+    <div class="dn-layer">
+
+      <!-- VNet A (spoke) -->
+      <div class="dn" style="left:25px;top:148px;width:175px;" onclick="selectNode('vneta')">
+        <div class="node-box c-blue" id="box-vneta">
+          <div class="node-label">VNet A</div>
+          <div class="node-sub">ARO cluster · spoke</div>
+        </div>
+      </div>
+
+      <!-- NVA (hub) -->
+      <div class="dn" style="left:278px;top:88px;width:155px;" onclick="selectNode('nva')">
+        <div class="node-box c-amber hexagon-like" id="box-nva">
+          <div class="node-label">NVA</div>
+          <div class="node-sub">network virtual appliance</div>
+        </div>
+      </div>
+
+      <!-- VPN Gateway (hub) -->
+      <div class="dn" style="left:468px;top:88px;width:155px;" onclick="selectNode('vpngw')">
+        <div class="node-box c-amber cloud" id="box-vpngw">
+          <div class="node-label">VPN Gateway</div>
+          <div class="node-sub">gateway subnet · hub</div>
+        </div>
+      </div>
+
+      <!-- VNet B (spoke) -->
+      <div class="dn" style="left:700px;top:148px;width:175px;" onclick="selectNode('vnetb')">
+        <div class="node-box c-blue" id="box-vnetb">
+          <div class="node-label">VNet B</div>
+          <div class="node-sub">UseRemoteGateways · spoke</div>
+        </div>
+      </div>
+
+      <!-- On-premises -->
+      <div class="dn" style="left:460px;top:278px;width:175px;" onclick="selectNode('onprem')">
+        <div class="node-box c-purple trapezoid" id="box-onprem">
+          <div class="node-label">On-Premises</div>
+          <div class="node-sub">via VPN / ExpressRoute</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">
+    ← Select a component above to see notes, gotchas, and relevant config.
+  </div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<!-- Reference cards -->
+<div class="ref-grid">
+
+  <div class="ref-card">
+    <div class="ref-card-title">Peering Properties</div>
+    <div class="ref-item"><span class="ref-item-label">AllowVirtualNetworkAccess</span><span class="ref-item-val">Include peered VNet in virtual_network NSG tag</span></div>
+    <div class="ref-item"><span class="ref-item-label">AllowForwardedTraffic</span><span class="ref-item-val">Allow traffic forwarded from NVA through peering</span></div>
+    <div class="ref-item"><span class="ref-item-label">AllowGatewayTransit</span><span class="ref-item-val">Hub side — let spokes use this VNet's gateway</span></div>
+    <div class="ref-item"><span class="ref-item-label">UseRemoteGateways</span><span class="ref-item-val">Spoke side — use hub's gateway instead of own</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Key Constraints</div>
+    <div class="ref-item"><span class="ref-item-label">Transitive routing</span><span class="ref-item-val"><span class="warn">Non-transitive — VNet A cannot reach VNet B via Hub without direct peering or NVA routing</span></span></div>
+    <div class="ref-item"><span class="ref-item-label">Overlapping CIDRs</span><span class="ref-item-val"><span class="warn">Not allowed between peered VNets</span></span></div>
+    <div class="ref-item"><span class="ref-item-label">One gateway per VNet</span><span class="ref-item-val">UseRemoteGateways and local gateway are mutually exclusive</span></div>
+    <div class="ref-item"><span class="ref-item-label">Max peers</span><span class="ref-item-val">500 (1,000 with Azure VNET Manager)</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">ARO Considerations</div>
+    <div class="ref-item"><span class="ref-item-label">Pod CIDR</span><span class="ref-item-val">Default <code>10.128.0.0/14</code> — must not overlap peered VNets</span></div>
+    <div class="ref-item"><span class="ref-item-label">Service CIDR</span><span class="ref-item-val">Default <code>172.30.0.0/16</code> — check on-prem ranges</span></div>
+    <div class="ref-item"><span class="ref-item-label">UDR + NVA</span><span class="ref-item-val"><span class="warn">0.0.0.0/0 via NVA routes all ARO egress through NVA — ensure required endpoints are allowed</span></span></div>
+    <div class="ref-item"><span class="ref-item-label">NSG interaction</span><span class="ref-item-val">ARO NSG is immutable — UDR changes must not conflict</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Diagnostics</div>
+    <div class="ref-item"><span class="ref-item-label">Peering state</span><span class="ref-item-val"><code>az network vnet peering list --vnet-name &lt;name&gt; -g &lt;rg&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Effective routes</span><span class="ref-item-val"><code>az network nic show-effective-route-table -n &lt;nic&gt; -g &lt;rg&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Connectivity check</span><span class="ref-item-val">Azure Network Watcher → Connection troubleshoot</span></div>
+    <div class="ref-item"><span class="ref-item-label">On-prem routes</span><span class="ref-item-val"><code>oc get nodes -o wide</code> then check effective routes on node NIC</span></div>
+  </div>
+
+</div>
+
+<div class="kcs-bar">
+  <span>References</span>
+  <div class="kcs-links">
+    <a href="https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview" target="_blank">MS Learn — VNet Peering Overview ↗</a>
+    <a href="https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-peering-gateway-transit" target="_blank">MS Learn — Gateway Transit ↗</a>
+    <a href="./aro-networking.html" target="_blank">ARO Networking (companion diagram) ↗</a>
+  </div>
+</div>
+
+<script>
+const nodeData = {
+  vneta: {
+    dotClass: 'c-blue', title: 'VNet A — Spoke',
+    cards: [
+      { title: 'Role', body: `A spoke VNet in the hub-and-spoke topology — typically where an ARO cluster lives. Peered with the Hub VNet to access shared infrastructure (NVA, VPN Gateway). <span class="warn">Peering is non-transitive:</span> VNet A cannot reach VNet B through Hub without a direct peering or NVA-based routing between them.` },
+      { title: 'UDR for NVA routing', body: `A User-Defined Route (UDR) on VNet A's subnets sets the NVA's private IP as the next hop, forcing traffic through the NVA for inspection. Without a UDR, traffic bypasses the NVA entirely. <span class="warn">If a 0.0.0.0/0 UDR routes all egress through the NVA, ensure the NVA allows all ARO required egress endpoints.</span>` },
+      { title: 'CIDR requirements', body: `Peered VNet address spaces cannot overlap. VNet A (e.g. <code>10.1.0.0/16</code>) must not conflict with the Hub VNet, VNet B, or any on-premises ranges. Also check ARO's pod CIDR (default <code>10.128.0.0/14</code>) and service CIDR (default <code>172.30.0.0/16</code>) against all peered ranges.` },
+      { title: 'AllowForwardedTraffic', body: `For NVA service chaining to work, the peering from Hub VNet toward VNet A must have <code>AllowForwardedTraffic=true</code>. This allows traffic that was forwarded by a VM (the NVA) — not originating from the hub VNet itself — to flow through the peering to VNet A.` },
+    ]
+  },
+  nva: {
+    dotClass: 'c-amber', title: 'NVA — Network Virtual Appliance',
+    cards: [
+      { title: 'Role', body: `A firewall, proxy, or inspection appliance (e.g. Azure Firewall, Palo Alto, Fortinet) running as a VM in the hub. Inspects and filters traffic between spoke VNets and the internet or on-premises. Positioned in its own subnet in the Hub VNet.` },
+      { title: 'Service chaining via UDR', body: `Traffic is steered through the NVA using UDRs on spoke VNets, setting the NVA's private IP as the next hop. The NVA then forwards traffic to its destination. <span class="warn">You cannot use a UDR with an ExpressRoute gateway as the next hop type</span> — only VM or VPN gateway next hops are supported.` },
+      { title: 'Impact on ARO egress', body: `If a UDR routes ARO cluster egress (<code>0.0.0.0/0</code>) through an NVA, all outbound traffic — including traffic to Azure Resource Manager, <code>quay.io</code>, <code>registry.access.redhat.com</code>, and ARO control plane endpoints — must pass through the NVA. Blocking any required endpoint will break the cluster.` },
+      { title: 'High availability', body: `A single NVA VM is a single point of failure. Production deployments should use NVA HA pairs (active-passive or active-active) with an internal load balancer as the UDR next hop, or use Azure Firewall (zone-redundant by default).` },
+    ]
+  },
+  vpngw: {
+    dotClass: 'c-amber', title: 'VPN Gateway',
+    cards: [
+      { title: 'Role', body: `Provides connectivity from the Hub VNet to on-premises networks via IPsec/IKE VPN or ExpressRoute. Deployed in the Gateway Subnet of the Hub VNet. Can be shared with spoke VNets via gateway transit, eliminating the cost and complexity of a gateway in each spoke.` },
+      { title: 'Gateway transit', body: `Set <code>AllowGatewayTransit=true</code> on the hub side of the peering. Spoke VNets then set <code>UseRemoteGateways=true</code> to use the hub's gateway as if it were their own. <span class="warn">The VPN Gateway must exist in the hub before the peering is created</span> — if it's added after, reset the peering to sync.` },
+      { title: 'One gateway per VNet', body: `<span class="warn">A VNet can have only one gateway — either local or remote.</span> A spoke VNet using <code>UseRemoteGateways</code> cannot simultaneously have its own VPN Gateway. Plan your gateway strategy before deploying ARO.` },
+      { title: 'Global peering constraint', body: `When VNets are <em>globally</em> peered (across Azure regions), resources cannot communicate with the front-end IP of a <span class="warn">Basic SKU</span> load balancer in the globally peered VNet. Use Standard SKU load balancers for cross-region hub-and-spoke with ARO.` },
+    ]
+  },
+  vnetb: {
+    dotClass: 'c-blue', title: 'VNet B — Spoke with Remote Gateway',
+    cards: [
+      { title: 'UseRemoteGateways', body: `VNet B is configured with <code>UseRemoteGateways=true</code> on its peering to the Hub. This allows VNet B to route on-premises-bound traffic through the hub's VPN Gateway without deploying its own gateway — reducing cost and simplifying management.` },
+      { title: 'Mutually exclusive with local gateway', body: `<span class="warn">A VNet using a remote gateway cannot have its own local VPN Gateway.</span> If VNet B already has a gateway, <code>UseRemoteGateways</code> cannot be enabled. Remove the local gateway first.` },
+      { title: 'Non-transitive routing', body: `Even with a remote gateway, VNet B cannot communicate with VNet A through the Hub unless: (a) a direct VNet A ↔ VNet B peering exists, or (b) the NVA in the Hub explicitly routes traffic between the two spoke address spaces via UDR.` },
+      { title: 'CIDR planning', body: `VNet B's address space must not overlap with VNet A, the Hub VNet, or on-premises ranges. When deploying ARO in VNet B, verify pod CIDR (<code>10.128.0.0/14</code> default) and service CIDR (<code>172.30.0.0/16</code> default) don't conflict with existing ranges reachable via the remote gateway.` },
+    ]
+  },
+  onprem: {
+    dotClass: 'c-purple', title: 'On-Premises Network',
+    cards: [
+      { title: 'Connectivity', body: `The on-premises network connects to the Hub VNet via the VPN Gateway using IPsec/IKE site-to-site VPN, or via ExpressRoute for higher bandwidth and lower latency. Once connected, all spoke VNets with <code>UseRemoteGateways</code> can reach on-premises resources.` },
+      { title: 'ARO and on-premises routing', body: `For ARO pods to reach on-premises resources, on-premises routes must be advertised via BGP through the VPN Gateway into the Hub VNet and propagated to the spoke peerings. Check effective routes on ARO worker node NICs: next hop should be <code>VirtualNetworkGateway</code> for on-premises CIDRs.` },
+      { title: 'CIDR overlap risk', body: `<span class="warn">On-premises address ranges must not overlap with ARO pod CIDR (<code>10.128.0.0/14</code>) or service CIDR (<code>172.30.0.0/16</code>).</span> Overlap causes silent routing failures — pods appear to connect but traffic is dropped. Verify with <code>az network nic show-effective-route-table</code>.` },
+      { title: 'Diagnostics', body: `Verify BGP route propagation: <code>az network vnet-gateway list-learned-routes</code>. Use Azure Network Watcher Connection Troubleshoot to trace connectivity from an ARO node to an on-premises IP. If routes appear but traffic fails, check NSG rules and on-premises firewall policies.` },
+    ]
+  },
+};
+</script>
+<script src="../../assets/theme.js"></script>
+</body>
+</html>
