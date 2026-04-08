@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="cv-title" content="Konnectivity in ROSA HCP">
-<meta name="cv-description" content="How the control plane tunnels traffic to worker nodes in ROSA HCP — agent registration, the two-service architecture (:8090/:8091), proxy sidecars, and failure modes.">
-<meta name="cv-platform" content="ROSA HCP">
-<meta name="cv-tags" content="ROSA HCP,Konnectivity,Networking,HyperShift">
+<meta name="cv-title" content="Konnectivity in HyperShift HCP">
+<meta name="cv-description" content="How the control plane tunnels traffic to worker nodes across the network boundary in HyperShift — agent registration, the two-service architecture (:8090/:8091), proxy sidecars, and failure modes. Applies to ROSA HCP, ARO HCP, Agent-based, and KubeVirt.">
+<meta name="cv-platform" content="Multi">
+<meta name="cv-tags" content="HCP,Konnectivity,Networking,HyperShift,ROSA HCP,ARO HCP">
 <meta name="cv-accent" content="teal">
-<title>Konnectivity in ROSA HCP</title>
+<title>Konnectivity in HyperShift HCP</title>
 <script>
   document.documentElement.setAttribute('data-theme',
     localStorage.getItem('cv-theme') ||
@@ -67,13 +67,13 @@
 </div>
 
 <div class="page-header">
-  <div class="page-title">Konnectivity in ROSA HCP</div>
+  <div class="page-title">Konnectivity in HyperShift HCP</div>
   <div class="page-subtitle">How the control plane tunnels traffic to worker nodes when they live in separate networks.</div>
 </div>
 
 <div class="scope-banner">
   <span>⚠</span>
-  <span><strong>ROSA HCP / HyperShift.</strong> In HyperShift the control plane runs in a management cluster on a different network from the worker nodes. Konnectivity provides a reverse tunnel so the API server, operators, and proxy sidecars can reach kubelets, services, and endpoints on the data plane. This architecture does not apply to ROSA Classic or self-managed OCP.</span>
+  <span><strong>HyperShift / Hosted Control Planes.</strong> In HyperShift the control plane runs in a management cluster on a different network from the worker nodes. Konnectivity provides a reverse tunnel so the API server, operators, and proxy sidecars can reach kubelets, services, and endpoints on the data plane. This architecture applies to <strong>ROSA HCP, ARO HCP, Agent-based HCP, and KubeVirt HCP</strong>. ROSA Classic and self-managed OCP do not use Hosted Control Planes and are not affected.</span>
 </div>
 
 <div class="legend">
