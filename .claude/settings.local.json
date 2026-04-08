@@ -4,7 +4,15 @@
       "WebSearch",
       "WebFetch(domain:docs.redhat.com)",
       "WebFetch(domain:access.redhat.com)",
-      "WebFetch(domain:aws.amazon.com)"
+      "WebFetch(domain:aws.amazon.com)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(sed -i 's/justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:var\\(--kcs-text\\)/justify-content:flex-start;flex-wrap:wrap;gap:16px;font-size:11px;color:var\\(--kcs-text\\)/g' /home/philip/Downloads/_work/concept-visualizer/docs/diagrams/aro-dns-flow.html /home/philip/Downloads/_work/concept-visualizer/docs/diagrams/rosa-hcp-network-topology.html)",
+      "Bash(sed -i 's|<div class=\"kcs-bar\">\\\\n.*<span>📄 KCS 7015390.*</span>.*</div>||' /home/philip/Downloads/_work/concept-visualizer/docs/diagrams/aro-dns-flow.html)",
+      "Bash(python3:*)",
+      "WebFetch(domain:docs.openshift.com)"
     ]
   }
 }
