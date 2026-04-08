@@ -1,5 +1,24 @@
 # /visualize
 
+**When this skill is invoked, output this banner first — before anything else:**
+
+```
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║   🔭  Concept Visualizer                                 ║
+║                                                          ║
+║   Interactive architecture diagrams for ARO, ROSA, OCP  ║
+║                                                          ║
+║   /visualize [topic]       →  create a new one-pager    ║
+║   /visualize compile       →  publish to GitHub Pages   ║
+║   /visualize fact-check    →  verify accuracy           ║
+║                                                          ║
+║   💡 Tip: attach a screenshot or flowchart and Claude   ║
+║      will use it as the basis for the diagram layout.   ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+```
+
 You are helping create, maintain, publish, and fact-check interactive HTML one-pager diagrams for the **Concept Visualizer** project — a collection of interactive architecture reference documents for Red Hat Technical Support Engineers covering ARO, ROSA, and self-managed OCP topics.
 
 The user invoked `/visualize` with these arguments: **$ARGUMENTS**
@@ -19,6 +38,8 @@ Parse `$ARGUMENTS` and branch to the appropriate section:
 ---
 
 ## [Generate] — Create a new one-pager
+
+> **💡 Got a diagram image?** If the user has attached a screenshot, whiteboard photo, or existing flowchart, use it as the structural basis for the flow — preserve the component layout and flow direction, correct any spelling/label errors, and expand with accurate detail cards. Skip to Step 3 after reading the spec files.
 
 ### Step 1: Read the spec and platform conventions
 
