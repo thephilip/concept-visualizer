@@ -135,6 +135,14 @@ Report the layout check result: list each node's `top + estimatedHeight` and con
 
 The sources file must list every URL and KCS article used, with access status (public / paywalled) and the date verified. Flag any time-sensitive claims that may need re-verification.
 
+### Step 5b: Automatic fact-check (post-build, pre-deliver)
+
+After saving the HTML and sources files, automatically run a fact-check on the newly created file before delivering it to the user. Follow the **[Fact-check]** steps exactly — extract all links and claims, verify links (using the sub-agent if > 5 links), and report findings.
+
+Present the fact-check results to the user alongside the completed diagram. If any **Incorrect** or **Dead** issues are found, fix them before considering the page ready. If only **Unverified** items remain, note them and let the user decide.
+
+Do not run `/visualize compile` until the user confirms they are satisfied with the fact-check results.
+
 ### Output checklist before delivering
 
 - [ ] `guide.md` read and spec followed
@@ -145,6 +153,7 @@ The sources file must list every URL and KCS article used, with access status (p
 - [ ] Sources file saved to the correct `sources/` directory
 - [ ] KCS/docs bar present at the bottom of the HTML
 - [ ] HTML saved to the correct `outputs/` directory
+- [ ] Fact-check passed — no Incorrect or Dead findings outstanding
 
 ---
 
@@ -300,7 +309,18 @@ And add a theme toggle button in the site header:
 
 Inline `assets/theme.js` at the end of `<body>` in the index as well (only the theme toggle portion — omit `selectNode` which is for one-pagers only).
 
-### Step 4b: Layout verification (SVG diagrams)
+### Step 4b: Pre-compile fact-check (new or modified files only)
+
+Before compiling, identify which source files have been modified since their last compile by comparing git status or file modification times. For each modified or new file:
+
+1. Run a fact-check (following **[Fact-check]** steps) on the source file.
+2. Use the sub-agent for link verification if the file has > 5 external links.
+3. If any **Incorrect** or **Dead** findings are found, report them and **halt compilation for that file** — do not compile until the user approves or fixes the issues.
+4. If only **Unverified** items are found, note them in the compile report and proceed.
+
+Skip fact-check for files that have not changed since their last compile (no need to re-verify unchanged content).
+
+### Step 4c: Layout verification (SVG diagrams)
 
 Before writing each compiled file, check for node overflow. For any source file containing `.dn-layer`:
 
@@ -309,7 +329,7 @@ Extract each `.dn` node's `top` and `width` from inline styles. Estimate height:
 
 If `max(top + estimatedHeight) + 20 > svgHeight`, fix the SVG `height`, `viewBox`, and zone rect heights in the compiled output before writing. Report any corrections made.
 
-### Step 4c: Generate `docs/manifest.json`
+### Step 4d: Generate `docs/manifest.json`
 
 After writing all compiled files and `docs/index.html`, generate a machine-readable registry at `docs/manifest.json`.
 
@@ -364,15 +384,25 @@ Extract two things:
 
 ### Step 3: Verify links
 
-For every external URL extracted in Step 2, fetch it and check whether it returns a successful response (2xx) or an error (4xx, 5xx, redirect to a different page). Report:
+Count the external URLs extracted in Step 2.
+
+**If count > 5 — spawn a research sub-agent for parallel verification:**
+
+Launch a general-purpose sub-agent with this prompt (substituting the actual URL list):
+
+> You are a link verification agent. For each URL in the list below, fetch it and return its HTTP status. Report back as a JSON array: `[{"url": "...", "status": "Live|Redirected|Dead", "resolvedUrl": "...or null"}]`. Resolved URL is only needed if the URL redirected to a different location. URLs: [paste full list here]
+
+Wait for the sub-agent to return results, then use them to build the links report. If the sub-agent is unavailable or fails, fall back to sequential verification.
+
+**If count ≤ 5 — verify links inline sequentially** (no sub-agent overhead).
+
+For any dead or redirected links, search official sources to find the correct replacement URL before reporting.
 
 | Status | Meaning |
 |---|---|
 | **Live** | URL returns 2xx — include the resolved URL if it redirected |
 | **Redirected** | URL redirected — note the new URL so the source can be updated |
 | **Dead** | URL returns 4xx/5xx — needs replacing |
-
-For dead or redirected links, search official sources to find the correct replacement URL before reporting.
 
 ### Step 4: Verify factual claims against official sources
 
