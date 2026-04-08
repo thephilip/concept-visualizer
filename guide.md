@@ -157,9 +157,9 @@ For diagrams with more than ~5 nodes, cross-zone connections, bidirectional flow
 For each node, estimate its rendered height:
 - Standard node (label + sub only): **~55px**
 - Node with `oval` shape: **~50px**
-- Node with a nested list (e.g. `.op-list` with 3 lines): **~120px**
+- Node with a nested list (e.g. `.op-list` with 3 lines): **~130px**
 
-Required height = `max(top + estimatedHeight)` across all nodes, **+ 20px bottom padding**.
+Required height = `max(top + estimatedHeight)` across all nodes, **+ 30px bottom padding**.
 
 Set `height="[H]"` and `viewBox="0 0 900 [H]"` on the SVG. Zone background rects use `height = H - 30`.
 

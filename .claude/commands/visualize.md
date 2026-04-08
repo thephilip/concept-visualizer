@@ -117,7 +117,7 @@ For each `.dn` node, extract `top` and `width` from its inline `style`. Estimate
 - Oval node: **50px**
 - Node with a nested list (`.op-list`, extra content beyond label+sub): **120px**
 
-Calculate: `requiredHeight = max(top + estimatedHeight) + 20`
+Calculate: `requiredHeight = max(top + estimatedHeight) + 30`
 
 Compare to the SVG `height` attribute. If `requiredHeight > svgHeight`:
 1. Update the SVG `height` attribute and `viewBox` height to `requiredHeight`
@@ -303,7 +303,7 @@ Inline `assets/theme.js` at the end of `<body>` in the index as well (only the t
 Before writing each compiled file, check for node overflow. For any source file containing `.dn-layer`:
 
 Extract each `.dn` node's `top` and `width` from inline styles. Estimate height:
-- Standard node: **55px** · Oval: **50px** · Node with extra content (`.op-list` or similar): **120px**
+- Standard node: **55px** · Oval: **50px** · Node with extra content (`.op-list` or similar): **130px**
 
 If `max(top + estimatedHeight) + 20 > svgHeight`, fix the SVG `height`, `viewBox`, and zone rect heights in the compiled output before writing. Report any corrections made.
 
