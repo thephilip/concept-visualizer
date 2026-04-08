@@ -25,8 +25,9 @@
   .site-header{text-align:center;flex:1;}
   .site-title{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-0.5px;margin-bottom:8px;}
   .site-subtitle{font-size:13px;color:var(--text-muted);max-width:480px;margin:0 auto;}
-  .theme-btn{font-family:inherit;font-size:11px;color:var(--text-dim);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;transition:color 0.2s,border-color 0.2s;flex-shrink:0;}
-  .theme-btn:hover{color:var(--text-muted);border-color:var(--border-hi);}
+  .btn{font-family:inherit;font-size:11px;color:var(--text-dim);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;transition:color 0.2s,border-color 0.2s;flex-shrink:0;}
+  .btn:hover{color:var(--text-muted);border-color:var(--border-hi);}
+  .top-bar-actions{display:flex;gap:8px;align-items:center;}
   .card-grid{display:grid;grid-template-columns:repeat(auto-fit,300px);gap:20px;justify-content:center;}
   .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-decoration:none;color:inherit;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;gap:12px;}
   .card:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
@@ -40,18 +41,47 @@
   .footer{margin-top:64px;text-align:center;font-size:11px;color:var(--text-dim);}
   .footer a{color:var(--text-dim);text-decoration:none;border-bottom:1px solid var(--border);}
   .footer a:hover{color:var(--text-muted);}
+
+  /* ── Help modal ── */
+  .modal-backdrop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:100;align-items:center;justify-content:center;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:var(--bg2);border:1px solid var(--border-hi);border-radius:var(--radius-lg);width:100%;max-width:580px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;margin:24px;}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
+  .modal-title{font-size:14px;font-weight:600;color:var(--text);}
+  .modal-close{font-family:inherit;font-size:20px;line-height:1;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:2px 6px;}
+  .modal-close:hover{color:var(--text-muted);}
+  .modal-tabs{display:flex;padding:16px 24px 0;border-bottom:1px solid var(--border);}
+  .modal-tab{font-family:inherit;font-size:11px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;padding:6px 14px 10px;cursor:pointer;margin-bottom:-1px;transition:color 0.15s;}
+  .modal-tab:hover{color:var(--text-muted);}
+  .modal-tab.active{color:var(--text);border-bottom-color:var(--blue);}
+  .modal-body{padding:24px;overflow-y:auto;flex:1;}
+  .modal-panel{display:none;}
+  .modal-panel.active{display:block;}
+  .modal-section{margin-bottom:20px;}
+  .modal-section:last-child{margin-bottom:0;}
+  .modal-section h3{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:8px;}
+  .modal-section p{font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:6px;}
+  .modal-section p:last-child{margin-bottom:0;}
+  .modal-section code{color:var(--amber);font-size:11px;background:rgba(245,158,11,0.08);padding:1px 5px;border-radius:3px;}
+  .modal-tip{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:12px;}
+  .modal-soon{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius);padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:12px;}
+  .modal-soon strong{color:var(--blue);}
 </style>
 </head>
 <body>
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cv-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));</script>
 <div class="container">
   <div class="top-bar">
-    <div style="width:80px;"></div>
+    <div class="top-bar-actions">
+      <button class="btn" onclick="openHelp()">? Help</button>
+    </div>
     <div class="site-header">
       <div class="site-title">Concept Visualizer</div>
-      <div class="site-subtitle">Interactive architecture and flow diagrams for ARO, ROSA, and OpenShift troubleshooting</div>
+      <div class="site-subtitle">Interactive architecture and flow diagrams for ARO, ROSA, HCP, and OpenShift troubleshooting</div>
     </div>
-    <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+    <div class="top-bar-actions">
+      <button id="theme-toggle" class="btn" onclick="toggleTheme()">☾ Dark</button>
+    </div>
   </div>
   <div class="card-grid">
     <a class="card" href="diagrams/aro-dns-flow.html">
@@ -95,6 +125,93 @@
     <a href="https://github.com/thephilip/concept-visualizer" target="_blank">View on GitHub</a>
   </div>
 </div>
-<script>(function(){var K='cv-theme';function a(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='light'?'☀ Light':'☾ Dark';}window.toggleTheme=function(){var c=document.documentElement.getAttribute('data-theme')||'dark';var n=c==='dark'?'light':'dark';localStorage.setItem(K,n);a(n);};a(localStorage.getItem(K)||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));})();</script>
+
+<!-- ── Help modal ── -->
+<div class="modal-backdrop" id="help-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">🔭 Concept Visualizer — Help</span>
+      <button class="modal-close" onclick="closeHelp()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab(0)">Using</button>
+      <button class="modal-tab" onclick="switchTab(1)">Creating</button>
+      <button class="modal-tab" onclick="switchTab(2)">Contributing</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Panel 1: Using -->
+      <div class="modal-panel active">
+        <div class="modal-section">
+          <h3>What is this?</h3>
+          <p>Concept Visualizer is a collection of interactive architecture reference diagrams for ARO, ROSA, HCP, and self-managed OCP — built for Red Hat Technical Support Engineers.</p>
+          <p>Each diagram explains a specific flow, architecture, or failure mode with clickable components, detail cards, and quick-reference tables.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Navigating a diagram</h3>
+          <p><strong>Click any node</strong> in the flow diagram to expand its detail panel — covering role, key behavior, gotchas, and diagnostic commands.</p>
+          <p><strong>Scope banner</strong> — the amber banner at the top of each diagram tells you which platform(s) the content applies to. Always read it before sharing with a customer.</p>
+          <p><strong>Reference cards</strong> below the diagram cover timing, config commands, platform-specific facts, and diagnostics at a glance.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Theme</h3>
+          <p>Use the <strong>☾ Dark / ☀ Light</strong> toggle in the top-right corner. Your preference is saved across sessions.</p>
+        </div>
+      </div>
+
+      <!-- Panel 2: Creating -->
+      <div class="modal-panel">
+        <div class="modal-section">
+          <h3>Requirements</h3>
+          <p>You need <strong>Claude Code</strong> with this repository cloned and open as the working directory.</p>
+        </div>
+        <div class="modal-section">
+          <h3>Generate a new diagram</h3>
+          <p>Run the <code>/visualize</code> slash command with a topic description:</p>
+          <p><code>/visualize ARO egress lockdown and gateway proxy architecture</code></p>
+          <p>Claude will read the spec, research official sources, confirm the platform scope with you, and build a complete one-pager with a flow diagram, detail cards, and reference tables.</p>
+          <div class="modal-tip">
+            💡 <strong>Tip:</strong> Attach a screenshot, whiteboard photo, or existing flowchart — Claude will use it as the structural basis for the diagram layout and expand it with accurate detail.
+          </div>
+        </div>
+        <div class="modal-section">
+          <h3>Platform routing</h3>
+          <p>Diagrams are organized by platform. Claude will save your file to the correct folder automatically:</p>
+          <p><code>aro/</code> — ARO Classic &nbsp;·&nbsp; <code>hcp/</code> — ROSA HCP, ARO HCP, HyperShift &nbsp;·&nbsp; <code>rosa/</code> — ROSA Classic &nbsp;·&nbsp; <code>ocp/</code> — Self-managed OCP</p>
+        </div>
+        <div class="modal-section">
+          <h3>Publish to this site</h3>
+          <p>Once your diagram is complete, run <code>/visualize compile</code> to inline all assets and update the <code>docs/</code> directory, then push to GitHub.</p>
+        </div>
+      </div>
+
+      <!-- Panel 3: Contributing -->
+      <div class="modal-panel">
+        <div class="modal-section">
+          <h3>Current workflow</h3>
+          <p>Create your diagram using <code>/visualize [topic]</code>, run <code>/visualize compile</code>, then submit a pull request to the repository.</p>
+          <p>If you don't have write access, open an issue on GitHub with your completed HTML file attached and a maintainer will review and publish it.</p>
+          <p><a href="https://github.com/thephilip/concept-visualizer" target="_blank" style="color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(59,130,246,0.3);">github.com/thephilip/concept-visualizer ↗</a></p>
+        </div>
+        <div class="modal-section">
+          <h3>Accuracy requirements</h3>
+          <p>All content must be traceable to an official source — <code>docs.redhat.com</code>, <code>docs.openshift.com</code>, <code>access.redhat.com/solutions/</code>, or <code>learn.microsoft.com</code> for ARO. The <code>/visualize</code> skill handles research automatically.</p>
+          <p>Every platform-specific diagram must include a scope banner. The skill adds one automatically.</p>
+        </div>
+        <div class="modal-soon">
+          <strong>Coming soon —</strong> the <code>/visualize</code> skill will automatically open a GitHub tracking issue when you complete a new diagram, making it easy to submit your work for review without needing git access. Watch this space.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>(function(){var K='cv-theme';function a(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='light'?'☀ Light':'☾ Dark';}window.toggleTheme=function(){var c=document.documentElement.getAttribute('data-theme')||'dark';var n=c==='dark'?'light':'dark';localStorage.setItem(K,n);a(n);};a(localStorage.getItem(K)||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));})();
+function openHelp(){document.getElementById('help-modal').classList.add('open');}
+function closeHelp(){document.getElementById('help-modal').classList.remove('open');}
+function switchTab(n){document.querySelectorAll('.modal-tab').forEach(function(t,i){t.classList.toggle('active',i===n);});document.querySelectorAll('.modal-panel').forEach(function(p,i){p.classList.toggle('active',i===n);});}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHelp();});
+document.getElementById('help-modal').addEventListener('click',function(e){if(e.target===this)closeHelp();});</script>
 </body>
 </html>
