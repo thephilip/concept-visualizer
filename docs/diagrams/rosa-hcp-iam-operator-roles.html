@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="cv-title" content="ROSA HCP IAM Operator Roles & Route53 DNS">
+<meta name="cv-description" content="How ROSA HCP uses OIDC/IRSA and per-cluster IAM operator roles to manage Route53 private hosted zones. Explains why the control-plane-operator continuously updates DNS records — and why CloudTrail alerts for this are expected.">
+<meta name="cv-platform" content="ROSA HCP">
+<meta name="cv-tags" content="ROSA HCP,IAM,Route53,DNS,OIDC,IRSA,Networking,CloudTrail">
+<meta name="cv-accent" content="amber">
+<title>ROSA HCP IAM Operator Roles & Route53 DNS</title>
+<script>
+  /* Prevent flash of unstyled content — apply theme before CSS renders */
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('cv-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  );
+</script>
+<style>*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117;
+  --bg2: #161b26;
+  --bg3: #1e2435;
+  --border: rgba(255,255,255,0.08);
+  --border-hi: rgba(255,255,255,0.18);
+  --text: #e2e8f0;
+  --text-muted: #8892a4;
+  --text-dim: #5a6478;
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.15);
+  --blue-border: rgba(59,130,246,0.35);
+  --teal: #14b8a6;
+  --teal-dim: rgba(20,184,166,0.12);
+  --teal-border: rgba(20,184,166,0.3);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --amber-border: rgba(245,158,11,0.3);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --purple-border: rgba(167,139,250,0.3);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.1);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --green-border: rgba(74,222,128,0.25);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --label-blue:   #93c5fd;
+  --label-teal:   #5eead4;
+  --label-amber:  #fcd34d;
+  --label-purple: #c4b5fd;
+  --label-green:  #4ade80;
+  --scope-text:   #fcd34d;
+  --scope-strong: #fde68a;
+  --kcs-text: #93c5fd;
+}
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg2: #ffffff;
+  --bg3: #f1f5f9;
+  --border: rgba(0,0,0,0.08);
+  --border-hi: rgba(0,0,0,0.15);
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+  --blue: #2563eb;
+  --blue-dim: rgba(59,130,246,0.1);
+  --blue-border: rgba(59,130,246,0.45);
+  --teal: #0d9488;
+  --teal-dim: rgba(20,184,166,0.1);
+  --teal-border: rgba(20,184,166,0.4);
+  --amber: #d97706;
+  --amber-dim: rgba(245,158,11,0.1);
+  --amber-border: rgba(245,158,11,0.45);
+  --purple: #7c3aed;
+  --purple-dim: rgba(167,139,250,0.1);
+  --purple-border: rgba(167,139,250,0.4);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.1);
+  --green: #16a34a;
+  --green-dim: rgba(22,163,74,0.1);
+  --green-border: rgba(22,163,74,0.3);
+  --label-blue:   #1d4ed8;
+  --label-teal:   #0f766e;
+  --label-amber:  #b45309;
+  --label-purple: #6d28d9;
+  --label-green:  #15803d;
+  --scope-text:   #92400e;
+  --scope-strong: #78350f;
+  --kcs-text: #1d4ed8;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+}
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.nav-link {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1px;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--text-muted); }
+.theme-btn {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.theme-btn:hover { color: var(--text-muted); border-color: var(--border-hi); }
+.page-header { margin-bottom: 10px; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.scope-banner {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  font-size: 11px;
+  color: var(--scope-text);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.6;
+}
+.scope-banner strong { color: var(--scope-strong); }
+.legend {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 20px; padding: 10px 14px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+.legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
+.flow-wrap {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 28px 20px 20px;
+  margin-bottom: 20px; overflow-x: auto;
+}
+.flow { display: flex; align-items: center; gap: 0; min-width: 740px; position: relative; }
+.node {
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.15s;
+}
+.node:hover { transform: translateY(-2px); }
+.node:hover .node-box { border-color: var(--border-hi); }
+.node-box {
+  border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--bg3); padding: 10px 14px; text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s; min-width: 90px; position: relative;
+}
+.node-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: node-pulse 0.4s ease-out; }
+.node-box.oval { border-radius: 999px; padding: 10px 20px; }
+.node-box.hexagon-like {
+  border-radius: 8px;
+  clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
+  padding: 12px 22px; min-width: 110px;
+}
+.node-box.cloud { border-radius: 24px 24px 8px 8px; padding: 10px 16px; min-width: 110px; }
+.node-box.trapezoid {
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  padding: 10px 18px; min-width: 110px;
+}
+.node-label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.node-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+.node-box.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   }
+.node-box.c-teal   { background: var(--teal-dim);   border-color: var(--teal-border);   }
+.node-box.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  }
+.node-box.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
+.node-box.c-green  { background: var(--green-dim);  border-color: var(--green-border);  }
+.node-box.c-blue .node-label   { color: var(--label-blue); }
+.node-box.c-teal .node-label   { color: var(--label-teal); }
+.node-box.c-amber .node-label  { color: var(--label-amber); }
+.node-box.c-purple .node-label { color: var(--label-purple); }
+.node-box.c-green .node-label  { color: var(--label-green); }
+.arrow { display: flex; align-items: center; flex: 1; min-width: 28px; position: relative; }
+.arrow-line { height: 1px; background: var(--border-hi); flex: 1; position: relative; }
+.arrow-line::after {
+  content: ''; position: absolute; right: -1px; top: -4px;
+  border: 5px solid transparent; border-left-color: var(--border-hi);
+}
+.arrow-label {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; color: var(--text-dim); white-space: nowrap;
+  background: var(--bg2); padding: 0 4px;
+}
+.detail-panel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  margin-bottom: 20px; min-height: 130px;
+}
+.detail-panel h3 {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot.c-blue   { background: var(--blue); }
+.dot.c-teal   { background: var(--teal); }
+.dot.c-amber  { background: var(--amber); }
+.dot.c-purple { background: var(--purple); }
+.dot.c-green  { background: var(--green); }
+.detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
+.detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+.detail-card-body code { color: var(--amber); font-size: 11px; background: var(--amber-dim); padding: 1px 4px; border-radius: 3px; }
+.detail-card-body .warn { color: var(--red); }
+.detail-card-body .ok { color: var(--green); }
+.hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 10px; letter-spacing: 0.03em; }
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+.ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
+.ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+.ref-item:last-child { border-bottom: none; }
+.ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+.ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
+.ref-item-val code { color: var(--amber); font-size: 10px; }
+.timeline {
+  display: flex; align-items: stretch; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; margin-top: 8px; font-size: 10px;
+}
+.tl-seg { flex: 1; padding: 6px 8px; text-align: center; border-right: 1px solid var(--border); }
+.tl-seg:last-child { border-right: none; }
+.tl-seg .tl-label { color: var(--text-muted); }
+.tl-seg .tl-val { color: var(--text); font-weight: 600; margin-top: 2px; }
+.tl-seg.tl-warn { background: var(--red-dim); }
+.tl-seg.tl-ok   { background: var(--green-dim); }
+.kcs-bar {
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  border-radius: var(--radius); padding: 10px 16px;
+  display: flex; align-items: center; justify-content: flex-start;
+  flex-wrap: wrap; gap: 16px; font-size: 11px; color: var(--kcs-text);
+}
+.kcs-bar a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--blue-border); }
+.kcs-bar a:hover { border-bottom-color: var(--blue); }
+.kcs-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.account-labels {
+  display: flex; align-items: flex-end; min-width: 740px;
+  margin-bottom: 14px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; gap: 0;
+}
+.account-label-rh {
+  width: 170px; flex-shrink: 0; text-align: center;
+  color: var(--amber); padding-bottom: 6px; border-bottom: 1px solid var(--amber-border);
+}
+.account-label-gap {
+  width: 12px; flex-shrink: 0; border-bottom: 1px dashed var(--border-hi);
+  align-self: flex-end; height: 14px;
+}
+.account-label-customer {
+  flex: 1; text-align: center; color: var(--purple);
+  padding-bottom: 6px; border-bottom: 1px solid var(--purple-border);
+}
+@keyframes node-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--blue-dim); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="../index.html" class="nav-link">← Concept Visualizer</a>
+  <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☾ Dark</button>
+</div>
+
+<div class="page-header">
+  <div class="page-title">ROSA HCP IAM Operator Roles &amp; Route53 DNS</div>
+  <div class="page-subtitle">How the control-plane-operator assumes an IAM role via OIDC/IRSA to manage private hosted zone DNS records — and why CloudTrail alerts for this are expected.</div>
+</div>
+
+<div class="scope-banner">
+  <span>⚠</span>
+  <span><strong>ROSA HCP-specific.</strong> IAM operator roles and Route53 private hosted zone management via IRSA apply to ROSA with Hosted Control Planes only. ROSA Classic uses a different IAM model (OCM service roles) and does not create per-cluster operator roles. Self-managed OCP and ARO (which uses Azure Managed Identity) have separate identity architectures.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Kubernetes / OpenShift layer (Red Hat mgmt cluster)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> AWS cloud service / IAM resource</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-dim);border-color:var(--teal-border)"></div> Customer VPC infrastructure</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> External / Red Hat–hosted service</div>
+</div>
+
+<div class="flow-wrap">
+
+  <div class="account-labels">
+    <div class="account-label-rh">Red Hat Mgmt Cluster</div>
+    <div class="account-label-gap"></div>
+    <div class="account-label-customer">Customer AWS Account</div>
+  </div>
+
+  <p class="hint">Click any component to see details</p>
+
+  <div class="flow">
+
+    <div class="node" onclick="selectNode('cpo')">
+      <div class="node-box c-blue" id="box-cpo">
+        <div class="node-label">control-plane-operator</div>
+        <div class="node-sub">kube-system · Red Hat–managed pod</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">AssumeRole (STS)</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('operator-roles')">
+      <div class="node-box c-amber" id="box-operator-roles">
+        <div class="node-label">IAM Operator Roles</div>
+        <div class="node-sub">8 per cluster · ROSAControlPlaneOperatorPolicy</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">ChangeResourceRecordSets</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('route53')">
+      <div class="node-box c-amber cloud" id="box-route53">
+        <div class="node-label">Route53 Private Zones</div>
+        <div class="node-sub">2 per cluster · *.hypershift.local</div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="arrow-line"><span class="arrow-label">CNAME record</span></div>
+    </div>
+
+    <div class="node" onclick="selectNode('vpce')">
+      <div class="node-box c-teal" id="box-vpce">
+        <div class="node-label">VPC Endpoint</div>
+        <div class="node-sub">PrivateLink · private CP connectivity</div>
+      </div>
+    </div>
+
+  </div>
+
+  
+  <div style="display:flex;align-items:flex-start;margin-top:28px;min-width:740px;padding-left:240px;gap:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:1px;height:28px;border-left:1px dashed var(--border-hi);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-hi);margin-bottom:2px;"></div>
+    </div>
+    <div style="width:44px;height:0;border-top:1px dashed var(--border-hi);margin-top:35px;"></div>
+    <div class="node" onclick="selectNode('oidc')" style="margin-top:14px;">
+      <div class="node-box c-green cloud" id="box-oidc">
+        <div class="node-label">OIDC Provider</div>
+        <div class="node-sub">oidc.op1.openshiftapps.com · trust anchor</div>
+      </div>
+    </div>
+    <div style="padding-left:16px;padding-top:18px;font-size:10px;color:var(--text-dim);line-height:1.8;max-width:300px;">
+      IAM role trust policy references this OIDC provider &nbsp;•&nbsp; Service account tokens exchanged for STS credentials<br>
+      <code style="color:var(--amber);font-size:10px;">arn:aws:iam::&lt;acct&gt;:oidc-provider/oidc.op1.openshiftapps.com/&lt;config-id&gt;</code>
+    </div>
+  </div>
+
+</div>
+
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">
+    ← Select a component above to see notes, gotchas, and relevant config.
+  </div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<div class="ref-grid">
+
+  <div class="ref-card">
+    <div class="ref-card-title">Operator role creation (HCP)</div>
+    <div class="ref-item"><span class="ref-item-label">Prerequisites</span><span class="ref-item-val">Account roles + OIDC config must exist first</span></div>
+    <div class="ref-item"><span class="ref-item-label">Create account roles</span><span class="ref-item-val"><code>rosa create account-roles --hosted-cp</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Create OIDC config</span><span class="ref-item-val"><code>rosa create oidc-config --mode=auto</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Create operator roles</span><span class="ref-item-val"><code>rosa create operator-roles --hosted-cp --prefix &lt;PREFIX&gt; --oidc-config-id &lt;ID&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Key flag</span><span class="ref-item-val"><code>--hosted-cp</code> required — omitting creates Classic roles</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">IAM roles per cluster (8 total)</div>
+    <div class="ref-item"><span class="ref-item-label">control-plane-operator</span><span class="ref-item-val">Route53 + VPC endpoints</span></div>
+    <div class="ref-item"><span class="ref-item-label">capa-controller-manager</span><span class="ref-item-val">EC2, ELB, IAM provisioning</span></div>
+    <div class="ref-item"><span class="ref-item-label">kube-controller-manager</span><span class="ref-item-val">EC2 metadata, load balancers</span></div>
+    <div class="ref-item"><span class="ref-item-label">ebs-cloud-credentials</span><span class="ref-item-val">EBS CSI driver (PVC provisioning)</span></div>
+    <div class="ref-item"><span class="ref-item-label">installer-cloud-credentials</span><span class="ref-item-val">Image registry S3 bucket</span></div>
+    <div class="ref-item"><span class="ref-item-label">cloud-network-config</span><span class="ref-item-val">Network config / EgressIP</span></div>
+    <div class="ref-item"><span class="ref-item-label">kms-provider</span><span class="ref-item-val">KMS key operations (if etcd encryption enabled)</span></div>
+    <div class="ref-item"><span class="ref-item-label">node-pool-management</span><span class="ref-item-val">EC2 instances, autoscaling</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">CloudTrail alert suppression</div>
+    <div class="ref-item"><span class="ref-item-label">Alert source</span><span class="ref-item-val"><code>ChangeResourceRecordSets</code> on <code>*.hypershift.local</code> zones</span></div>
+    <div class="ref-item"><span class="ref-item-label">Why it fires</span><span class="ref-item-val">CPO reconciles DNS continuously — not on a fixed schedule</span></div>
+    <div class="ref-item"><span class="ref-item-label">Suppress by</span><span class="ref-item-val">Allowlist <code>&lt;cluster&gt;-kube-system-control-plane-operator</code> IAM role in CloudTrail rule</span></div>
+    <div class="ref-item"><span class="ref-item-label">Pattern</span><span class="ref-item-val"><code>&lt;PREFIX&gt;-kube-system-control-plane-operator</code> (one per cluster)</span></div>
+    <div class="ref-item"><span class="ref-item-label">Is it a security issue?</span><span class="ref-item-val">No — role is scoped to *.hypershift.local records only via ROSAControlPlaneOperatorPolicy</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Route53 &amp; operator role diagnostics</div>
+    <div class="ref-item"><span class="ref-item-label">List hosted zones</span><span class="ref-item-val"><code>aws route53 list-hosted-zones-by-vpc --vpc-id &lt;ID&gt; --vpc-region &lt;REGION&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">List records in zone</span><span class="ref-item-val"><code>aws route53 list-resource-record-sets --hosted-zone-id &lt;ZONE-ID&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">List operator roles</span><span class="ref-item-val"><code>rosa list operator-roles --prefix &lt;PREFIX&gt;</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Inspect role trust policy</span><span class="ref-item-val"><code>aws iam get-role --role-name &lt;ROLE-NAME&gt; --query Role.AssumeRolePolicyDocument</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Describe OIDC config</span><span class="ref-item-val"><code>rosa describe oidc-config --id &lt;CONFIG-ID&gt;</code></span></div>
+  </div>
+
+</div>
+
+<div class="kcs-bar">
+  <span>References</span>
+  <div class="kcs-links">
+    <a href="https://access.redhat.com/articles/7109571" target="_blank">KCS 7109571 — DNS in ROSA HCP vs Classic ↗</a>
+    <a href="https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/cloud-experts-rosa-hcp-sts-explained" target="_blank">ROSA HCP STS &amp; OIDC explained ↗</a>
+    <a href="https://docs.aws.amazon.com/rosa/latest/userguide/security-iam-awsmanpol-operator-policies.html" target="_blank">AWS managed operator policies ↗</a>
+    <a href="https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_rosa_with_hcp_clusters/rosa-hcp-sts-creating-a-cluster-quickly" target="_blank">Create ROSA HCP cluster (CLI) ↗</a>
+  </div>
+</div>
+
+<script>
+const nodeData = {
+  cpo: {
+    dotClass: 'c-blue',
+    title: 'control-plane-operator — Red Hat Management Cluster',
+    cards: [
+      {
+        title: 'Role &amp; location',
+        body: `The <code>control-plane-operator</code> runs as a pod in the Red Hat-managed HyperShift management cluster, inside a namespace dedicated to your cluster. It is <strong>not</strong> accessible to the customer. Its job is to continuously reconcile cluster infrastructure resources: VPC endpoints, Route53 DNS records, and cluster certificates. <span class="ok">This is expected Red Hat SRE–managed behavior.</span>`
+      },
+      {
+        title: 'Continuous reconciliation',
+        body: `The control-plane-operator runs a standard Kubernetes controller reconciliation loop. It does <span class="warn">not</span> fire on a fixed timer — it reconciles whenever it restarts, completes a leader election, or detects drift in observed vs desired state. This means <code>ChangeResourceRecordSets</code> calls appear in CloudTrail regularly, including after pod restarts, upgrades, and failovers. This is normal and expected.`
+      },
+      {
+        title: 'CloudTrail — expected activity',
+        body: `CloudTrail will log <code>ChangeResourceRecordSets</code> calls from the IAM role <code>&lt;PREFIX&gt;-kube-system-control-plane-operator</code>. These are not a sign of compromise or misconfiguration. The role is tightly scoped via <code>ROSAControlPlaneOperatorPolicy</code> to <code>*.hypershift.local</code> records only. <span class="ok">Suppress or allowlist this role in your CloudTrail alert rules.</span>`
+      },
+      {
+        title: 'What records it manages',
+        body: `The CPO maintains CNAME records in the private hosted zone pointing cluster service endpoints to their VPC endpoint DNS names. Key records: <code>api.&lt;cluster&gt;.hypershift.local</code> (Kubernetes API), <code>*.apps.&lt;cluster&gt;.hypershift.local</code> (default ingress). Both resolve to the VPCE DNS name — traffic stays in the VPC backbone.`
+      }
+    ]
+  },
+  'operator-roles': {
+    dotClass: 'c-amber',
+    title: 'IAM Operator Roles — Customer AWS Account',
+    cards: [
+      {
+        title: 'What they are',
+        body: `Eight IAM roles created <strong>per cluster</strong> in the customer's AWS account. Each role maps to one cluster operator's Kubernetes service account. Naming: <code>&lt;PREFIX&gt;-&lt;NAMESPACE&gt;-&lt;OPERATOR&gt;</code> (e.g. <code>myprefix-kube-system-control-plane-operator</code>). Roles are created by <code>rosa create operator-roles --hosted-cp</code> — a prerequisite before cluster creation.`
+      },
+      {
+        title: 'OIDC trust policy',
+        body: `Each role's trust policy allows <code>sts:AssumeRoleWithWebIdentity</code> from a specific OIDC provider and service account. The trust policy conditions scope it to exactly one service account (e.g. <code>system:serviceaccount:kube-system:control-plane-operator</code>). No role can be assumed by a different service account or from a different OIDC provider. <span class="ok">No static credentials are stored anywhere.</span>`
+      },
+      {
+        title: 'Attached AWS managed policies',
+        body: `Each role has exactly one AWS managed policy attached (maintained by AWS — read-only). The <code>kube-system-control-plane-operator</code> role uses <code>ROSAControlPlaneOperatorPolicy</code>, which grants: <code>route53:ListHostedZones</code> (unrestricted) and <code>route53:ChangeResourceRecordSets</code> restricted to <code>*.hypershift.local</code> records only. Also grants EC2 VPC endpoint management.`
+      },
+      {
+        title: 'Creation &amp; lifecycle',
+        body: `Roles must be created before the cluster. They are <span class="warn">not</span> created by the cluster install itself — they are a required prerequisite. A single OIDC config can be shared across multiple clusters; each cluster gets its own set of 8 roles. When a cluster is deleted, operator roles are <span class="warn">not automatically deleted</span> — run <code>rosa delete operator-roles --prefix &lt;PREFIX&gt;</code> to clean up.`
+      }
+    ]
+  },
+  route53: {
+    dotClass: 'c-amber',
+    title: 'Route53 Private Hosted Zones — Customer AWS Account',
+    cards: [
+      {
+        title: 'Two zones per cluster',
+        body: `ROSA HCP creates two Route53 private hosted zones associated with the customer's VPC: <code>&lt;cluster-name&gt;.hypershift.local</code> for internal cluster services (API, OAuth, ingress), and <code>rosa.&lt;domain-prefix&gt;.&lt;id&gt;.p3.openshiftapps.com</code> for the external-facing cluster domain. Both are resolvable only from within the associated VPC.`
+      },
+      {
+        title: 'What records are maintained',
+        body: `The control-plane-operator reconciles CNAME records in <code>*.hypershift.local</code>: <code>api.&lt;cluster&gt;.hypershift.local</code> → VPCE DNS name (API server), <code>*.apps.&lt;cluster&gt;.hypershift.local</code> → VPCE DNS name (ingress). Records are of type CNAME with TTL 300. The target is the VPC endpoint's DNS name (e.g. <code>vpce-xxxx.vpce-svc-yyyy.us-east-1.vpce.amazonaws.com</code>).`
+      },
+      {
+        title: 'Custom DNS forwarding — gotcha',
+        body: `If workers use a custom DNS server (set via DHCP option set on the VPC), that server <span class="warn">must forward both private zone domains</span> to Route53 Inbound Resolver endpoints deployed in the customer's VPC. Without this forwarding, nodes cannot resolve cluster-internal names and will fail to join or become NotReady. This is a common misconfiguration in custom-VPC deployments.`
+      },
+      {
+        title: 'Public zone — TLS only',
+        body: `A <strong>public</strong> hosted zone is also created for the cluster domain. <span class="warn">This is for TLS certificate DNS-01 validation only</span> — not for providing public cluster access. Records in the public zone point to private IPs. The public zone does not make the cluster reachable from the internet. Differs from ROSA Classic, which uses public zones for API server discovery.`
+      }
+    ]
+  },
+  vpce: {
+    dotClass: 'c-teal',
+    title: 'VPC Endpoint — Customer VPC',
+    cards: [
+      {
+        title: 'Role &amp; ownership',
+        body: `An interface VPC endpoint (PrivateLink) is provisioned in the customer's VPC by ROSA during cluster creation. The endpoint service is owned and operated by Red Hat in their AWS account. The customer sees the endpoint in their VPC; the endpoint service itself is not visible to them. Traffic to the API server and ingress flows through this endpoint — never over the public internet.`
+      },
+      {
+        title: 'CNAME target — how DNS resolves',
+        body: `Route53 CNAME records in <code>*.hypershift.local</code> point to the VPCE's DNS name. When a worker node resolves <code>api.&lt;cluster&gt;.hypershift.local</code>: VPC resolver → Route53 private zone → CNAME → VPCE DNS → private IP in customer subnet. The VPCE DNS name format is: <code>vpce-&lt;id&gt;.vpce-svc-&lt;id&gt;.&lt;region&gt;.vpce.amazonaws.com</code>.`
+      },
+      {
+        title: 'Security group — gotcha',
+        body: `The VPCE's default security group allows inbound traffic only from within the VPC CIDR. <span class="warn">If you access the cluster from a peered VPC, Transit Gateway, or AWS Direct Connect, that inbound traffic is blocked by default.</span> Attach an additional security group with the appropriate inbound HTTPS (443) and API (6443) rules, or use <code>rosa edit cluster --additional-allowed-principals</code> to whitelist specific IAM principals.`
+      },
+      {
+        title: 'Mandatory — no alternative',
+        body: `PrivateLink is <span class="warn">mandatory for all ROSA HCP clusters</span> regardless of whether the API endpoint is public or private. There is no VPN or VPC peering alternative for the control plane connection. A "public" ROSA HCP cluster means the API DNS name resolves publicly — but traffic still flows through the PrivateLink VPCE internally.`
+      }
+    ]
+  },
+  oidc: {
+    dotClass: 'c-green',
+    title: 'OIDC Provider — Red Hat Infrastructure',
+    cards: [
+      {
+        title: 'What it is',
+        body: `An OpenID Connect (OIDC) provider endpoint hosted by Red Hat, used as the trust anchor for IRSA (IAM Roles for Service Accounts). Operator pods present a signed service account token to AWS STS; STS validates the token against this OIDC provider and — if the trust policy matches — returns temporary AWS credentials. <span class="ok">No static AWS credentials are stored on the cluster.</span>`
+      },
+      {
+        title: 'Managed vs. unmanaged',
+        body: `<strong>Managed OIDC config (default):</strong> hosted at <code>oidc.op1.openshiftapps.com/&lt;config-id&gt;</code> in Red Hat's AWS account. Automatically rotated and maintained by Red Hat. <strong>Unmanaged OIDC config:</strong> customer hosts the discovery document in their own S3 bucket. One OIDC config can be shared across multiple ROSA HCP clusters (reduces IAM overhead for large fleets).`
+      },
+      {
+        title: 'Token flow (IRSA)',
+        body: `1. Kubernetes mounts a signed service account token into the operator pod. 2. The pod's AWS SDK reads the token and calls <code>sts:AssumeRoleWithWebIdentity</code>. 3. STS fetches the OIDC provider's public keys and validates the token signature. 4. If the subject (<code>system:serviceaccount:&lt;ns&gt;:&lt;sa&gt;</code>) matches the role's trust policy condition, STS returns temporary credentials. 5. The pod uses these credentials to call AWS APIs.`
+      },
+      {
+        title: 'CloudTrail appearance',
+        body: `In CloudTrail, IRSA authentication appears as <code>AssumeRoleWithWebIdentity</code> events. The <code>principalId</code> is <code>AROA...:&lt;session-name&gt;</code> and the <code>federatedProvider</code> is <code>arn:aws:iam::&lt;acct&gt;:oidc-provider/oidc.op1.openshiftapps.com/&lt;config-id&gt;</code>. This is the same OIDC config ID you see in <code>rosa list oidc-config</code>. <span class="ok">Both events are expected and not indicative of any issue.</span>`
+      }
+    ]
+  }
+};
+</script>
+<script>(function () {
+  var STORAGE_KEY = 'cv-theme';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = theme === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  window.toggleTheme = function () {
+    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    var next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+  };
+
+  var saved = localStorage.getItem(STORAGE_KEY);
+  var preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  applyTheme(saved || preferred);
+})();
+
+/* ── selectNode — shared interactive detail panel logic ──
+   nodeData must be defined in the page's own <script> block.
+   Each entry requires: { dotClass, title, cards: [{title, body}] }
+── */
+var activeNode = null;
+
+function selectNode(id) {
+  if (activeNode) {
+    var prev = document.getElementById('box-' + activeNode);
+    if (prev) prev.classList.remove('active');
+  }
+  activeNode = id;
+  var box = document.getElementById('box-' + id);
+  if (box) box.classList.add('active');
+
+  var data = nodeData[id];
+  if (!data) return;
+
+  document.getElementById('detail-hint').style.display = 'none';
+  var content = document.getElementById('detail-content');
+  content.style.display = 'grid';
+
+  var panel = document.getElementById('detail-panel');
+  var existing = panel.querySelector('h3');
+  if (existing) existing.remove();
+
+  var h3 = document.createElement('h3');
+  h3.innerHTML = '<div class="dot ' + data.dotClass + '"></div>' + data.title;
+  panel.insertBefore(h3, content);
+
+  content.innerHTML = data.cards.map(function (c) {
+    return '<div class="detail-card"><div class="detail-card-title">' + c.title + '</div><div class="detail-card-body">' + c.body + '</div></div>';
+  }).join('');
+}</script>
+</body>
+</html>

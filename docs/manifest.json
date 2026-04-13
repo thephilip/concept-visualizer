@@ -69,6 +69,26 @@
       "compiledAt": "2026-04-08"
     },
     {
+      "file": "rosa-hcp-iam-operator-roles.html",
+      "title": "ROSA HCP IAM Operator Roles & Route53 DNS",
+      "description": "How ROSA HCP uses OIDC/IRSA and per-cluster IAM operator roles to manage Route53 private hosted zones. Explains why the control-plane-operator continuously updates DNS records — and why CloudTrail alerts for this are expected.",
+      "platform": "ROSA HCP",
+      "tags": [
+        "ROSA HCP",
+        "IAM",
+        "Route53",
+        "DNS",
+        "OIDC",
+        "IRSA",
+        "Networking",
+        "CloudTrail"
+      ],
+      "accent": "amber",
+      "source": "hcp/outputs/rosa-hcp-iam-operator-roles.html",
+      "author": "Philip Smith",
+      "compiledAt": "2026-04-13"
+    },
+    {
       "file": "hcp-konnectivity.html",
       "title": "Konnectivity in HyperShift HCP",
       "description": "How the control plane tunnels traffic to worker nodes across the network boundary in HyperShift \u2014 agent registration, the two-service architecture (:8090/:8091), proxy sidecars, and failure modes. Applies to ROSA HCP, ARO HCP, Agent-based, and KubeVirt.",
