@@ -153,6 +153,7 @@ Do not run `/visualize compile` until the user confirms they are satisfied with 
 - [ ] Sources file saved to the correct `sources/` directory
 - [ ] KCS/docs bar present at the bottom of the HTML
 - [ ] HTML saved to the correct `outputs/` directory
+- [ ] **Sensitive data scan passed** — no customer data or RH-internal references in HTML or sources file
 - [ ] Fact-check passed — no Incorrect or Dead findings outstanding
 
 ---
@@ -313,10 +314,11 @@ Inline `assets/theme.js` at the end of `<body>` in the index as well (only the t
 
 Before compiling, identify which source files have been modified since their last compile by comparing git status or file modification times. For each modified or new file:
 
-1. Run a fact-check (following **[Fact-check]** steps) on the source file.
+1. Run a fact-check (following **[Fact-check]** steps) on the source file — this includes the sensitive data scan (Step 2b).
 2. Use the sub-agent for link verification if the file has > 5 external links.
-3. If any **Incorrect** or **Dead** findings are found, report them and **halt compilation for that file** — do not compile until the user approves or fixes the issues.
-4. If only **Unverified** items are found, note them in the compile report and proceed.
+3. If any **sensitive data** is found, **halt compilation for that file** immediately — do not compile until the user approves redactions and the data is removed from both the HTML and sources file.
+4. If any **Incorrect** or **Dead** findings are found, report them and **halt compilation for that file** — do not compile until the user approves or fixes the issues.
+5. If only **Unverified** items are found, note them in the compile report and proceed.
 
 Skip fact-check for files that have not changed since their last compile (no need to re-verify unchanged content).
 
@@ -382,6 +384,35 @@ Extract two things:
 
 **All links** — every `href` in the file that points to an external URL (skip `#` anchors and relative paths). List them with their link text.
 
+### Step 2b: Sensitive data scan
+
+Before verifying links or claims, scan **both the HTML file and its corresponding sources file** for customer data and RH-internal information that must not appear in a public repository.
+
+**Patterns to flag:**
+
+| Category | Pattern | Example of a bad match |
+|----------|---------|------------------------|
+| SFDC case number | 8-digit number starting with `0`, near words like "case", "sfdc", "ticket" | `case 04421211` |
+| AWS account ID in ARN | 12-digit number in an ARN (`arn:aws:...::<digits>:`) where the number is not a `<placeholder>` | `arn:aws:iam::407690150649:role/...` |
+| Real OIDC config ID | Long alphanumeric string (>12 chars) in an OIDC provider path (`oidc.op1.openshiftapps.com/<id>`) rather than a `<config-id>` placeholder | `oidc.op1.openshiftapps.com/2f5rumespe9uc54vlemug5jnso7c33qj` |
+| Customer cluster name in resource path | A specific cluster name embedded in an ARN, resource ID, or hosted zone path (not a generic `<cluster-name>` placeholder) | `rosa-qa-cluster-kube-system-control-plane-operator` in an ARN |
+| Customer Azure subscription/tenant ID | UUID appearing in an Azure resource path (`/subscriptions/<uuid>/`) | `/subscriptions/a1b2c3d4-.../` |
+| Customer AWS hosted zone ID | `Z` followed by alphanumeric chars in a Route53 zone reference, not a placeholder | `Z015168816UEPMRCE7QS8` |
+| RH-internal URL | Hostnames under `corp.redhat.com`, `mojo.redhat.com`, `source.redhat.com`, `issues.redhat.com` (internal Jira), `pagerduty.redhat.com` | `issues.redhat.com/browse/OCPBUGS-...` |
+
+**What counts as a placeholder (safe — do not flag):**
+- Text in angle brackets: `<cluster-name>`, `<account-id>`, `<config-id>`, `<zone-id>`
+- Generic example names used in documentation: `my-cluster`, `rosa-cluster`, `example.com`
+- Hex color values in CSS: `#0f1117`, `rgba(...)` — not account IDs
+
+**If any sensitive data is found:**
+1. List every match in the report under a **Sensitive Data** section (see Step 5).
+2. Suggest a redacted replacement for each match (e.g. replace the real account ID with `<account-id>`, replace the real OIDC config ID with `<oidc-config-id>`).
+3. **Block delivery** — do not present the file as ready until the user approves the redactions or confirms each match is a false positive.
+4. If approved, apply the redactions to both the HTML and sources file before proceeding (see Step 6).
+
+If no sensitive data is found, note "No sensitive data found" and continue.
+
 ### Step 3: Verify links
 
 Count the external URLs extracted in Step 2.
@@ -414,7 +445,15 @@ For each claim, search official sources to confirm:
 
 ### Step 5: Report findings
 
-Return a structured report in two sections:
+Return a structured report in three sections:
+
+**Sensitive data** (Step 2b results — report first, block delivery if any findings):
+
+| Location | Match | Category | Suggested replacement |
+|----------|-------|----------|-----------------------|
+| `sources/file.md:33` | `case 04421211` | SFDC case number | remove or replace with `<internal reference>` |
+
+If no sensitive data was found: state "No sensitive data found" and proceed.
 
 **Links:**
 
@@ -431,8 +470,55 @@ Return a structured report in two sections:
 | **Unverified** | Could not be confirmed from an official source — not necessarily wrong, but unsourced |
 | **Incorrect** | Contradicted by an official source — include the correct information and source URL |
 
-Do not edit the file until the user approves corrections.
+Do not edit the file until the user approves corrections. If sensitive data was found, that must be resolved before any other corrections are applied.
 
 ### Step 6: Apply corrections (if approved)
 
-If the user approves, edit the HTML file to fix any dead links, incorrect claims, or outdated content. Update the corresponding `sources/` file to reflect the changes and note the date re-verified.
+If the user approves, apply in this order:
+1. Redact any sensitive data from both the HTML file and sources file.
+2. Fix dead links and incorrect claims.
+3. Update the corresponding `sources/` file to reflect all changes and note the date re-verified.
+
+---
+
+## [Issue] — Open a GitHub tracking issue for a new diagram
+
+> **⚠ Not yet implemented.** This section defines the gate and content for the future auto-issue feature referenced in the help modal. Do not attempt to open issues yet — wire this up once the feature is built.
+
+When implemented, this step will run automatically after a new one-pager is compiled and pushed. It must **not** be triggered unless all of the following are true:
+
+### Prerequisites (hard gates — all must pass before opening an issue)
+
+- [ ] The diagram has been through **[Fact-check]**, including the sensitive data scan (Step 2b)
+- [ ] **No sensitive data findings** remain — all customer data and RH-internal references have been removed from both the HTML and sources file
+- [ ] **No Incorrect or Dead link findings** remain — all fact-check issues resolved or explicitly acknowledged by the user
+- [ ] The file has been **compiled** (`/visualize compile`) and exists in `docs/diagrams/`
+- [ ] The compiled file has been **pushed** to the remote `main` branch
+
+If any gate fails, do not open an issue. Report which gate failed and what must be resolved first.
+
+### Issue content (when implemented)
+
+Create a GitHub issue on `thephilip/concept-visualizer` with:
+
+- **Title:** `[diagram] <cv-title>`
+- **Body:**
+  ```
+  ## New diagram: <cv-title>
+
+  **Platform:** <cv-platform>
+  **Tags:** <cv-tags>
+
+  <cv-description>
+
+  **Live:** https://thephilip.github.io/concept-visualizer/diagrams/<filename>.html
+
+  **Source:** <platform>/outputs/<filename>.html
+
+  ---
+  Fact-check status: passed (no Incorrect, Dead, or sensitive data findings)
+  Compiled: <compiledAt>
+  ```
+- **Labels:** `diagram`, `<platform-lowercase>` (e.g. `rosa-hcp`)
+
+Do not include case numbers, customer names, or any other data that would fail the sensitive data scan.
