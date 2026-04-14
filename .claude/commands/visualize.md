@@ -187,6 +187,7 @@ Generate the Concept Visualizer index using the template below. For each discove
 
 For each card:
 - `href` → `diagrams/[filename].html`
+- `data-platform` → `cv-platform` value (used by the platform filter buttons)
 - `.card-accent` background → `var(--[cv-accent])`
 - `.card-title` → `cv-title` value
 - `.card-desc` → `cv-description` value
