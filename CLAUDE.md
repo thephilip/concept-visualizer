@@ -8,13 +8,14 @@ This project produces interactive, single-page HTML reference documents that exp
 
 ## Primary workflow: `/visualize`
 
-The `/visualize` slash command is the standard entry point for all one-pager work. It has three modes:
+The `/visualize` slash command is the standard entry point for all one-pager work. It has four modes:
 
 | Invocation | What it does |
 |---|---|
 | `/visualize` or `/visualize [topic]` | Create a new one-pager — reads spec, researches, builds HTML, then **auto-runs fact-check** before delivering |
 | `/visualize compile` | Fact-checks new/modified files, then inlines assets and publishes to `docs/` |
 | `/visualize fact-check [path]` | Manually verify an existing one-pager — checks links (parallel sub-agent if > 5) and factual claims against official sources |
+| `/visualize internal [topic]` | Create an internal-only one-pager saved to `internal/outputs/` — never committed or published |
 
 The full instructions for each mode are in `.claude/commands/visualize.md`. Read that file when running the command — do not reconstruct the workflow from memory.
 
@@ -47,11 +48,17 @@ concept-visualizer/
 │   └── outputs/
 │   └── sources/
 │
-└── ocp/
-    ├── CLAUDE.md          ← OCP self-managed conventions; read for any OCP topic
-    └── outputs/
-    └── sources/
+├── ocp/
+│   ├── CLAUDE.md          ← OCP self-managed conventions; read for any OCP topic
+│   └── outputs/
+│   └── sources/
+│
+└── internal/              ← GITIGNORED — never committed or published
+    ├── outputs/           ← internal-only HTML one-pagers (local access only)
+    └── sources/           ← internal sources (may reference internal URLs/docs)
 ```
+
+**`internal/` is gitignored.** Files there are never committed, never compiled into `docs/`, and never listed in the public index. Use `/visualize internal [topic]` to create content here. Source material may include internal Red Hat guidance (source.redhat.com, internal Jira, SBR routing docs) that cannot be publicly cited.
 
 ## Routing
 
