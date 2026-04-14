@@ -2,3 +2,9 @@
 *.swp
 *.swo
 *~
+resume.txt
+
+# Internal-only reference documents — never publish to GitHub
+# Files here contain RH-internal guidance and may reference internal sources.
+# Engineers access these locally from a clone of the repo.
+internal/

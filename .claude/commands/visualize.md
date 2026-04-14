@@ -34,6 +34,7 @@ Parse `$ARGUMENTS` and branch to the appropriate section:
 - If `$ARGUMENTS` starts with `build` → follow **[Build]**
 - If `$ARGUMENTS` starts with `compile` → follow **[Compile]**
 - If `$ARGUMENTS` starts with `fact-check` → follow **[Fact-check]**
+- If `$ARGUMENTS` starts with `internal` → follow **[Internal]**
 
 ---
 
@@ -268,6 +269,8 @@ Read `assets/style.css` and `assets/theme.js` in full. These will be inlined int
 ### Step 2: Discover source files
 
 Glob all `*/outputs/*.html`. For each file, read the `cv-*` meta tags. Skip any file missing required tags and report it to the user.
+
+**Always exclude `internal/outputs/` from this glob.** Internal documents are never compiled to `docs/` and never appear in the public index. If the glob returns any path beginning with `internal/`, skip it silently.
 
 ### Step 3: Compile each file
 
@@ -522,3 +525,67 @@ Create a GitHub issue on `thephilip/concept-visualizer` with:
 - **Labels:** `diagram`, `<platform-lowercase>` (e.g. `rosa-hcp`)
 
 Do not include case numbers, customer names, or any other data that would fail the sensitive data scan.
+
+---
+
+## [Internal] — Create or manage an internal-only one-pager
+
+Internal documents live in `internal/outputs/` and `internal/sources/`. They are gitignored and never committed to the public repository, never compiled into `docs/`, and never listed in the public index.
+
+**When to use this path:**
+- Source material is from an internal source (source.redhat.com, internal Jira, internal Confluence, internal Slack discussions)
+- Content includes RH-internal organizational guidance (SBR routing, team ownership, escalation paths)
+- Content references internal case numbers or customer-identifiable data that cannot be fully redacted without losing meaning
+- The audience is Red Hat engineers only — not suitable for public or customer-facing use
+
+### Step 1: Read the spec
+
+Read `guide.md` as normal — internal documents follow the same visual spec. Also read the relevant platform `CLAUDE.md` if the topic is platform-specific.
+
+### Step 2: Source material handling
+
+Internal source material (pasted article text, internal diagrams, screenshots) may be used freely. Do **not** include:
+- Verbatim SFDC case numbers in the HTML or sources file (summarize the scenario instead)
+- Customer-identifiable data of any kind
+- Internal URLs as clickable links in the HTML (they won't work for anyone without VPN/auth)
+
+In the sources file, cite internal documents as:
+```
+| Internal: [document title] | [brief description] | Internal (not publicly accessible) | [date] |
+```
+
+### Step 3: Build the HTML
+
+Follow the same spec as [Generate] Step 4. Add one additional meta tag to mark the file as internal:
+
+```html
+<meta name="cv-internal" content="true">
+```
+
+Also add a prominent banner at the very top of the page body (above the nav bar), distinct from the scope banner:
+
+```html
+<div style="background:#1a0a0a;border-bottom:2px solid #f87171;padding:8px 16px;font-size:11px;color:#f87171;text-align:center;letter-spacing:0.05em;">
+  🔒 INTERNAL — Red Hat engineers only. Do not share externally or link publicly.
+</div>
+```
+
+### Step 4: Save files
+
+- **HTML** → `internal/outputs/[filename].html`
+- **Sources** → `internal/sources/[filename].md`
+
+These paths are gitignored. The files will not be committed, compiled, or indexed.
+
+### Step 5: No fact-check required for internal sources
+
+The standard fact-check (link verification against public docs, claim verification against official sources) does not apply to content that is explicitly sourced from internal guidance documents. However, still run the **sensitive data scan** (Step 2b) to catch any SFDC case numbers or customer identifiers that may have slipped in.
+
+### Output checklist before delivering
+
+- [ ] `guide.md` spec followed
+- [ ] `cv-internal: true` meta tag present
+- [ ] Internal banner present at top of body
+- [ ] No SFDC case numbers or customer-identifiable data in HTML or sources file
+- [ ] Sensitive data scan passed
+- [ ] Files saved to `internal/outputs/` and `internal/sources/` (not platform directories)
