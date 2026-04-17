@@ -578,6 +578,21 @@ Also add a prominent banner at the very top of the page body (above the nav bar)
 
 These paths are gitignored. The files will not be committed, compiled, or indexed.
 
+### Step 4b: Compile to self-contained file for sharing
+
+Internal source files reference `../../assets/style.css` and `../../assets/theme.js` via relative paths. These paths only resolve when the file is opened from within the repo. When shared directly as a standalone file (e.g. sent to a colleague), those paths resolve to nothing and the page renders unstyled.
+
+After saving the source file, always produce a self-contained compiled copy:
+
+1. Read `assets/style.css` and `assets/theme.js`.
+2. Strip CSS comments from the stylesheet. Strip the top-level comment block from the JS.
+3. In the source HTML, replace `<link rel="stylesheet" href="../../assets/style.css">` with `<style>[minified CSS]</style>`.
+4. Replace `<script src="../../assets/theme.js"></script>` with `<script>[minified JS]</script>`.
+5. Strip HTML comments. Collapse 3+ consecutive blank lines to one.
+6. Write to **`internal/compiled/[filename].html`** — also gitignored.
+
+The file in `internal/compiled/` is what gets shared with colleagues. The file in `internal/outputs/` is the editable source.
+
 ### Step 5: No fact-check required for internal sources
 
 The standard fact-check (link verification against public docs, claim verification against official sources) does not apply to content that is explicitly sourced from internal guidance documents. However, still run the **sensitive data scan** (Step 2b) to catch any SFDC case numbers or customer identifiers that may have slipped in.
@@ -589,4 +604,5 @@ The standard fact-check (link verification against public docs, claim verificati
 - [ ] Internal banner present at top of body
 - [ ] No SFDC case numbers or customer-identifiable data in HTML or sources file
 - [ ] Sensitive data scan passed
-- [ ] Files saved to `internal/outputs/` and `internal/sources/` (not platform directories)
+- [ ] Source saved to `internal/outputs/` and `internal/sources/`
+- [ ] **Self-contained compiled copy saved to `internal/compiled/` — share this file, not the source**
