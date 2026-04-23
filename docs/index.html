@@ -11,6 +11,8 @@
     --border:rgba(255,255,255,0.08);--border-hi:rgba(255,255,255,0.18);
     --text:#e2e8f0;--text-muted:#8892a4;--text-dim:#5a6478;
     --blue:#3b82f6;--teal:#14b8a6;--amber:#f59e0b;--purple:#a78bfa;--green:#4ade80;
+    --red:#f87171;--red-dim:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.3);
+    --blue-dim:rgba(59,130,246,0.15);--blue-border:rgba(59,130,246,0.35);
     --radius:10px;--radius-lg:14px;
   }
   [data-theme="light"]{
@@ -18,6 +20,8 @@
     --border:rgba(0,0,0,0.08);--border-hi:rgba(0,0,0,0.15);
     --text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;
     --blue:#2563eb;--teal:#0d9488;--amber:#d97706;--purple:#7c3aed;--green:#16a34a;
+    --red:#ef4444;--red-dim:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.25);
+    --blue-dim:rgba(37,99,235,0.1);--blue-border:rgba(37,99,235,0.35);
   }
   body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace;font-size:13px;line-height:1.6;min-height:100vh;padding:48px 24px;}
   .container{max-width:960px;margin:0 auto;}
@@ -27,6 +31,9 @@
   .site-subtitle{font-size:13px;color:var(--text-muted);max-width:480px;margin:0 auto;}
   .btn{font-family:inherit;font-size:11px;color:var(--text-dim);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;transition:color 0.2s,border-color 0.2s;flex-shrink:0;}
   .btn:hover{color:var(--text-muted);border-color:var(--border-hi);}
+  .btn-import{color:#93c5fd;background:var(--blue-dim);border-color:var(--blue-border);}
+  .btn-import:hover{border-color:var(--blue);color:#93c5fd;}
+  [data-theme="light"] .btn-import{color:var(--blue);}
   .top-bar-actions{display:flex;gap:8px;align-items:center;}
   .card-grid{display:grid;grid-template-columns:repeat(auto-fit,300px);gap:20px;justify-content:center;}
   .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-decoration:none;color:inherit;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;gap:12px;}
@@ -36,6 +43,7 @@
   .card-desc{font-size:12px;color:var(--text-muted);line-height:1.7;}
   .card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;}
   .tag{font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text-dim);border:1px solid var(--border);}
+  .tag-internal{font-size:10px;padding:3px 8px;border-radius:4px;background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
   .card-arrow{font-size:12px;color:var(--text-dim);margin-top:4px;transition:color 0.2s;}
   .card:hover .card-arrow{color:var(--text-muted);}
   .footer{margin-top:64px;text-align:center;font-size:11px;color:var(--text-dim);}
@@ -47,16 +55,21 @@
   .search-input{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 14px;font-family:inherit;font-size:12px;color:var(--text);outline:none;transition:border-color 0.2s;}
   .search-input:focus{border-color:var(--border-hi);}
   .search-input::placeholder{color:var(--text-dim);}
-  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;}
   .filter-btn{font-family:inherit;font-size:11px;padding:3px 12px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;transition:color 0.15s,border-color 0.15s,background 0.15s;}
   .filter-btn:hover{color:var(--text-muted);border-color:var(--border-hi);}
   .filter-btn.active{background:var(--blue-dim);border-color:var(--blue-border);color:#93c5fd;}
   [data-theme="light"] .filter-btn.active{color:var(--blue);background:rgba(37,99,235,0.1);}
+  .filter-sep{width:1px;height:14px;background:var(--border);margin:0 2px;}
+  .filter-btn-internal.active{background:var(--red-dim);border-color:var(--red-border);color:var(--red);}
   .no-results{display:none;text-align:center;padding:48px 0;color:var(--text-dim);font-size:12px;line-height:2;}
   .no-results button{font-family:inherit;font-size:11px;color:var(--text-dim);background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;padding:0;}
   .no-results button:hover{color:var(--text-muted);}
 
-  /* ── Help modal ── */
+  /* ── API unsupported warning ── */
+  .api-warn{background:var(--red-dim);border:1px solid var(--red-border);border-radius:var(--radius);padding:8px 14px;font-size:11px;color:var(--red);margin-bottom:24px;display:none;text-align:center;}
+
+  /* ── Help + Sources modal shared styles ── */
   .modal-backdrop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:100;align-items:center;justify-content:center;}
   .modal-backdrop.open{display:flex;}
   .modal{background:var(--bg2);border:1px solid var(--border-hi);border-radius:var(--radius-lg);width:100%;max-width:580px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;margin:24px;}
@@ -80,6 +93,19 @@
   .modal-tip{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:12px;}
   .modal-soon{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius);padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:12px;}
   .modal-soon strong{color:var(--blue);}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+  /* ── Sources modal rows ── */
+  .src-list{display:flex;flex-direction:column;}
+  .src-empty{font-size:12px;color:var(--text-dim);text-align:center;padding:24px 0;}
+  .src-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .src-row:last-child{border-bottom:none;}
+  .src-icon{font-size:16px;flex-shrink:0;}
+  .src-info{flex:1;min-width:0;}
+  .src-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .src-meta{font-size:10px;color:var(--text-dim);margin-top:2px;}
+  .src-warn{color:var(--red);}
+  .src-actions{display:flex;gap:6px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -88,15 +114,22 @@
   <div class="top-bar">
     <div class="top-bar-actions">
       <button class="btn" onclick="openHelp()">? Help</button>
+      <button class="btn" id="sources-btn" onclick="openSources()">⊕ Sources</button>
     </div>
     <div class="site-header">
       <div class="site-title">Concept Visualizer</div>
       <div class="site-subtitle">Interactive architecture and flow diagrams for ARO, ROSA, HCP, and OpenShift troubleshooting</div>
     </div>
     <div class="top-bar-actions">
+      <button class="btn btn-import" onclick="importFolder()">↓ Import</button>
       <button id="theme-toggle" class="btn" onclick="toggleTheme()">☾ Dark</button>
     </div>
   </div>
+
+  <div class="api-warn" id="api-warn">
+    ⚠ Your browser doesn't support folder import. Use Chrome or Edge to enable this feature.
+  </div>
+
   <div class="search-bar">
     <input id="cv-search" class="search-input" type="search" placeholder="Search titles, tags, or platforms…" autocomplete="off" spellcheck="false">
     <div class="filter-btns">
@@ -106,9 +139,12 @@
       <button class="filter-btn" data-filter="ROSA Classic" onclick="setFilter('ROSA Classic')">ROSA Classic</button>
       <button class="filter-btn" data-filter="OCP" onclick="setFilter('OCP')">OCP</button>
       <button class="filter-btn" data-filter="Multi" onclick="setFilter('Multi')">Multi</button>
+      <div class="filter-sep"></div>
+      <button class="filter-btn filter-btn-internal" id="internal-filter-btn" onclick="toggleInternalFilter()">🔒 Internal</button>
     </div>
   </div>
-  <div class="card-grid">
+
+  <div class="card-grid" id="card-grid">
     <a class="card" href="diagrams/aro-dns-flow.html" data-platform="ARO">
       <div class="card-accent" style="background:var(--blue)"></div>
       <div class="card-title">ARO DNS Flow</div>
@@ -225,6 +261,14 @@
           <p><strong>Reference cards</strong> below the diagram cover timing, config commands, platform-specific facts, and diagnostics at a glance.</p>
         </div>
         <div class="modal-section">
+          <h3>Importing internal pages</h3>
+          <p>Click <strong>↓ Import</strong> in the top-right corner to add a local folder of internal one-pager HTML files. They appear in the index alongside public pages, marked 🔒, and are searchable. Your browser remembers the folder across sessions.</p>
+          <p>Use <strong>⊕ Sources</strong> to review or remove imported folders.</p>
+          <div class="modal-tip">
+            💡 <strong>Import from <code>internal/compiled/</code>, not <code>internal/outputs/</code>.</strong> The <code>outputs/</code> files reference shared assets via relative paths that break when opened from the browser. The <code>compiled/</code> files are fully self-contained and render correctly.
+          </div>
+        </div>
+        <div class="modal-section">
           <h3>Verifying accuracy</h3>
           <p>Diagrams can go stale as products evolve. Run <code>/visualize fact-check [file]</code> in Claude Code to verify all factual claims and check every link against official sources.</p>
           <p>Links are verified in parallel when there are more than 5 — it will flag anything outdated, dead-linked, or unverifiable and suggest corrections. Fact-check also runs automatically whenever a new diagram is built or compiled.</p>
@@ -261,6 +305,15 @@
           <p>You can also run it manually at any time: <code>/visualize fact-check [file]</code></p>
         </div>
         <div class="modal-section">
+          <h3>Internal-only one-pagers</h3>
+          <p>Use the <code>internal</code> sub-command to create one-pagers that are <strong>never committed, compiled, or published</strong> — for content sourced from internal guidance, case-specific context, or anything not suitable for the public index:</p>
+          <p><code>/visualize internal ROSA HCP memory over-commitment</code></p>
+          <p>Claude saves the source to <code>internal/outputs/</code> and automatically produces a self-contained compiled copy in <code>internal/compiled/</code>. Share the compiled file directly with colleagues (Slack, email), or point <strong>↓ Import</strong> at the <code>internal/compiled/</code> folder to browse them here alongside public pages.</p>
+          <div class="modal-tip">
+            💡 Internal pages follow the same visual spec as public ones but include a prominent red banner and are marked 🔒 in this index. They are gitignored — they will never appear in the repository or on this site.
+          </div>
+        </div>
+        <div class="modal-section">
           <h3>Publish to this site</h3>
           <p>Run <code>/visualize compile</code> — it fact-checks any new or changed files first, then inlines all assets and updates the <code>docs/</code> directory. Push to GitHub to deploy.</p>
         </div>
@@ -288,26 +341,49 @@
   </div>
 </div>
 
-<script>(function(){var K='cv-theme';function a(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='light'?'☀ Light':'☾ Dark';}window.toggleTheme=function(){var c=document.documentElement.getAttribute('data-theme')||'dark';var n=c==='dark'?'light':'dark';localStorage.setItem(K,n);a(n);};a(localStorage.getItem(K)||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));})();
+<!-- ── Sources modal ── -->
+<div class="modal-backdrop" id="sources-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sources-modal-title" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title" id="sources-modal-title">⊕ Imported folders</span>
+      <button class="modal-close" onclick="closeSources()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="sources-modal-body" style="padding:20px 24px;">
+      <!-- populated by renderSourcesModal() -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-import" onclick="importFolder()">↓ Import another folder</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Theme ── */
+(function(){var K='cv-theme';function a(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='light'?'☀ Light':'☾ Dark';}window.toggleTheme=function(){var c=document.documentElement.getAttribute('data-theme')||'dark';var n=c==='dark'?'light':'dark';localStorage.setItem(K,n);a(n);};a(localStorage.getItem(K)||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));})();
+
+/* ── Help modal ── */
 function openHelp(){document.getElementById('help-modal').classList.add('open');}
 function closeHelp(){document.getElementById('help-modal').classList.remove('open');}
 function switchTab(n){document.querySelectorAll('.modal-tab').forEach(function(t,i){t.classList.toggle('active',i===n);});document.querySelectorAll('.modal-panel').forEach(function(p,i){p.classList.toggle('active',i===n);});}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHelp();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeHelp();closeSources();}});
 document.getElementById('help-modal').addEventListener('click',function(e){if(e.target===this)closeHelp();});
+document.getElementById('sources-modal').addEventListener('click',function(e){if(e.target===this)closeSources();});
 
-/* ── Search & filter ── */
-var _filter='all',_query='';
+/* ── Search & platform filter ── */
+var _filter='all',_query='',_internalOnly=false;
 function _applyFilters(){
   var q=_query.toLowerCase();
   var shown=0;
   document.querySelectorAll('.card').forEach(function(c){
     var platform=(c.dataset.platform||'').toLowerCase();
-    var title=c.querySelector('.card-title').textContent.toLowerCase();
-    var desc=c.querySelector('.card-desc').textContent.toLowerCase();
-    var tags=Array.from(c.querySelectorAll('.tag')).map(function(t){return t.textContent.toLowerCase();}).join(' ');
+    var isInternal=c.dataset.internal==='true';
+    var title=(c.querySelector('.card-title')||{}).textContent||'';
+    var desc=(c.querySelector('.card-desc')||{}).textContent||'';
+    var tags=Array.from(c.querySelectorAll('.tag,.tag-internal')).map(function(t){return t.textContent.toLowerCase();}).join(' ');
     var pMatch=_filter==='all'||platform===_filter.toLowerCase();
-    var qMatch=!q||title.includes(q)||desc.includes(q)||tags.includes(q);
-    var show=pMatch&&qMatch;
+    var iMatch=!_internalOnly||isInternal;
+    var qMatch=!q||title.toLowerCase().includes(q)||desc.toLowerCase().includes(q)||tags.includes(q)||(isInternal&&'internal'.includes(q));
+    var show=pMatch&&iMatch&&qMatch;
     c.style.display=show?'':'none';
     if(show)shown++;
   });
@@ -315,14 +391,196 @@ function _applyFilters(){
 }
 function setFilter(p){
   _filter=p;
-  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.toggle('active',b.dataset.filter===p);});
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b){b.classList.toggle('active',b.dataset.filter===p);});
   _applyFilters();
 }
-function clearSearch(){
-  document.getElementById('cv-search').value='';
-  _query='';
-  setFilter('all');
+function toggleInternalFilter(){
+  _internalOnly=!_internalOnly;
+  document.getElementById('internal-filter-btn').classList.toggle('active',_internalOnly);
+  _applyFilters();
 }
-document.getElementById('cv-search').addEventListener('input',function(){_query=this.value;_applyFilters();});</script>
+function clearSearch(){document.getElementById('cv-search').value='';_query='';setFilter('all');_internalOnly=false;document.getElementById('internal-filter-btn').classList.remove('active');_applyFilters();}
+document.getElementById('cv-search').addEventListener('input',function(){_query=this.value;_applyFilters();});
+
+/* ══════════════════════════════════════════════
+   Local folder import — File System Access API
+══════════════════════════════════════════════ */
+var DB_NAME='cv-index',DB_VER=1,STORE='sources';
+var _sources=[];  /* {id, handle, label, pageCount, status} */
+var SKIP=new Set(['docs','node_modules','.git','__pycache__']);
+
+/* IndexedDB helpers */
+function openDB(){return new Promise(function(res,rej){var r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=function(e){e.target.result.createObjectStore(STORE,{keyPath:'id'});};r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};});}
+function dbAll(){return openDB().then(function(db){return new Promise(function(res,rej){var r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};});});}
+function dbPut(rec){return openDB().then(function(db){return new Promise(function(res,rej){var r=db.transaction(STORE,'readwrite').objectStore(STORE).put(rec);r.onsuccess=function(){res();};r.onerror=function(e){rej(e.target.error);};});});}
+function dbDel(id){return openDB().then(function(db){return new Promise(function(res,rej){var r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=function(){res();};r.onerror=function(e){rej(e.target.error);};});});}
+
+/* Permission helpers */
+async function queryPerm(h){try{return await h.queryPermission({mode:'read'});}catch(e){return 'denied';}}
+async function requestPerm(h){try{return await h.requestPermission({mode:'read'});}catch(e){return 'denied';}}
+
+/* Scan a directory recursively */
+async function scanDir(dirHandle,depth){
+  var pages=[];
+  if(depth>3)return pages;
+  try{
+    for await(var entry of dirHandle.values()){
+      if(entry.kind==='directory'){
+        if(SKIP.has(entry.name))continue;
+        pages=pages.concat(await scanDir(entry,depth+1));
+      }else if(entry.kind==='file'&&entry.name.endsWith('.html')){
+        var p=await parsePage(entry);
+        if(p)pages.push(p);
+      }
+    }
+  }catch(e){}
+  return pages;
+}
+
+async function parsePage(fileHandle){
+  try{
+    var text=await(await fileHandle.getFile()).text();
+    if(!text.includes('cv-title'))return null;
+    var doc=new DOMParser().parseFromString(text,'text/html');
+    var m=function(n){var el=doc.querySelector('meta[name="'+n+'"]');return el?el.getAttribute('content'):null;};
+    var title=m('cv-title');
+    if(!title)return null;
+    return{title:title,description:m('cv-description')||'',platform:m('cv-platform')||'Multi',
+      tags:(m('cv-tags')||'').split(',').map(function(t){return t.trim();}).filter(Boolean),
+      accent:m('cv-accent')||'blue',internal:m('cv-internal')==='true',fileHandle:fileHandle};
+  }catch(e){return null;}
+}
+
+/* Open a local page via blob URL */
+async function openLocalPage(fileHandle){
+  try{
+    var url=URL.createObjectURL(await fileHandle.getFile());
+    window.open(url,'_blank');
+    setTimeout(function(){URL.revokeObjectURL(url);},10000);
+  }catch(e){alert('Could not open page: '+e.message);}
+}
+
+/* Render local pages into the card grid */
+function renderLocalCards(pages,sourceId){
+  /* remove previous cards from this source */
+  document.querySelectorAll('.card[data-source="'+sourceId+'"]').forEach(function(c){c.remove();});
+  var grid=document.getElementById('card-grid');
+  var ACCENT={blue:'var(--blue)',teal:'var(--teal)',amber:'var(--amber)',purple:'var(--purple)',green:'var(--green)'};
+  pages.forEach(function(p){
+    var card=document.createElement('div');
+    card.className='card';
+    card.dataset.platform=p.platform;
+    card.dataset.source=sourceId;
+    if(p.internal)card.dataset.internal='true';
+    var tags=p.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('');
+    var intBadge=p.internal?'<span class="tag-internal">🔒 Internal</span>':'';
+    card.innerHTML='<div class="card-accent" style="background:'+( ACCENT[p.accent]||'var(--blue)')+'"></div>'
+      +'<div class="card-title">'+esc(p.title)+'</div>'
+      +'<div class="card-desc">'+esc(p.description)+'</div>'
+      +'<div class="card-tags">'+intBadge+tags+'</div>'
+      +'<div class="card-arrow">Open →</div>';
+    card.addEventListener('click',function(){openLocalPage(p.fileHandle);});
+    grid.appendChild(card);
+  });
+  _applyFilters();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* Scan one source and update its cards */
+async function scanSource(src){
+  var perm=await queryPerm(src.handle);
+  if(perm!=='granted'){src.status='needs-permission';return;}
+  src.status='scanning';
+  var pages=await scanDir(src.handle,0);
+  src.pageCount=pages.length;
+  src.status='ok';
+  renderLocalCards(pages,src.id);
+}
+
+/* Sources modal */
+function openSources(){renderSourcesModal();document.getElementById('sources-modal').classList.add('open');}
+function closeSources(){document.getElementById('sources-modal').classList.remove('open');}
+
+function renderSourcesModal(){
+  var body=document.getElementById('sources-modal-body');
+  if(!_sources.length){
+    body.innerHTML='<div class="src-empty">No folders imported yet.<br>Click <strong>↓ Import another folder</strong> below to get started.</div>';
+    return;
+  }
+  body.innerHTML='<div class="src-list">'+_sources.map(function(s){
+    var icon=s.status==='ok'?'📁':s.status==='scanning'?'⟳':'⚠';
+    var meta=s.status==='scanning'?'Scanning…'
+      :s.status==='needs-permission'?'<span class="src-warn">Permission needed — click Grant</span>'
+      :s.status==='denied'?'<span class="src-warn">Access denied</span>'
+      :(s.pageCount||0)+' page'+(s.pageCount!==1?'s':'')+' found';
+    var actions=s.status==='needs-permission'||s.status==='denied'
+      ?'<button class="btn" onclick="grantAccess(\''+s.id+'\')">Grant</button>'
+      :'<button class="btn" onclick="refreshSrc(\''+s.id+'\')">↺</button>';
+    return '<div class="src-row">'
+      +'<span class="src-icon">'+icon+'</span>'
+      +'<div class="src-info"><div class="src-name">'+esc(s.label)+'</div><div class="src-meta">'+meta+'</div></div>'
+      +actions
+      +'<button class="btn" onclick="removeSrc(\''+s.id+'\')" title="Remove">✕</button>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+/* Import a folder (triggered by ↓ Import button) */
+window.importFolder=async function(){
+  if(!window.showDirectoryPicker){document.getElementById('api-warn').style.display='block';return;}
+  try{
+    var handle=await window.showDirectoryPicker({mode:'read'});
+    var id='src-'+Date.now();
+    var src={id:id,handle:handle,label:handle.name,pageCount:0,status:'pending'};
+    _sources.push(src);
+    await dbPut({id:id,handle:handle,label:handle.name});
+    await scanSource(src);
+    renderSourcesModal();
+  }catch(e){if(e.name!=='AbortError')alert('Could not import folder: '+e.message);}
+};
+
+window.removeSrc=async function(id){
+  await dbDel(id);
+  _sources=_sources.filter(function(s){return s.id!==id;});
+  document.querySelectorAll('.card[data-source="'+id+'"]').forEach(function(c){c.remove();});
+  _applyFilters();
+  renderSourcesModal();
+};
+
+window.grantAccess=async function(id){
+  var src=_sources.find(function(s){return s.id===id;});
+  if(!src)return;
+  var perm=await requestPerm(src.handle);
+  if(perm==='granted'){await scanSource(src);}else{src.status='denied';}
+  renderSourcesModal();
+};
+
+window.refreshSrc=async function(id){
+  var src=_sources.find(function(s){return s.id===id;});
+  if(!src)return;
+  var perm=await queryPerm(src.handle);
+  if(perm!=='granted')perm=await requestPerm(src.handle);
+  if(perm!=='granted'){src.status='denied';renderSourcesModal();return;}
+  document.querySelectorAll('.card[data-source="'+id+'"]').forEach(function(c){c.remove();});
+  await scanSource(src);
+  renderSourcesModal();
+};
+
+/* Init — restore saved folders */
+(async function(){
+  if(!window.showDirectoryPicker){document.getElementById('api-warn').style.display='block';return;}
+  var saved=[];
+  try{saved=await dbAll();}catch(e){}
+  for(var i=0;i<saved.length;i++){
+    var rec=saved[i];
+    var src={id:rec.id,handle:rec.handle,label:rec.label||rec.handle.name,pageCount:0,status:'pending'};
+    _sources.push(src);
+    var perm=await queryPerm(rec.handle);
+    if(perm==='granted'){await scanSource(src);}
+    else{src.status='needs-permission';}
+  }
+})();
+</script>
 </body>
 </html>

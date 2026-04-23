@@ -22,6 +22,12 @@ Interactive architecture diagrams for ARO, ROSA, HCP, and OCP — built for Tech
 
 The live site is at the link above. Individual compiled pages are also fully self-contained and can be downloaded from `docs/diagrams/` and opened in any browser with no server needed.
 
+### Browsing internal pages
+
+The public index includes an **↓ Import** button (top-right, Chrome/Edge only). Click it to pick a local folder of internal compiled HTML files — they appear alongside public pages, marked 🔒, and are fully searchable. The browser remembers the folder across visits.
+
+Use the **🔒 Internal** filter button to show only imported internal pages. Click **⊕ Sources** to review or remove imported folders.
+
 ## Creating a new one-pager
 
 Use the `/visualize` slash command in Claude Code:
