@@ -1,0 +1,30 @@
+name: Block IDE config injection
+
+on:
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  check:
+    name: Reject .claude / .vscode modifications
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if .claude/ or .vscode/ are modified
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          changed=$(git diff --name-only "origin/$BASE_REF"...HEAD)
+          echo "$changed"
+          if echo "$changed" | grep -qE '^\.claude/|^\.vscode/'; then
+            echo ""
+            echo "ERROR: This PR modifies .claude/ or .vscode/ directories."
+            echo "These directories are active malware vectors (see Miasma)."
+            echo "If this change is intentional, a repo admin must apply it directly to main."
+            exit 1
+          fi
