@@ -8,3 +8,6 @@ resume.txt
 # Files here contain RH-internal guidance and may reference internal sources.
 # Engineers access these locally from a clone of the repo.
 internal/
+
+# Claude Code project settings — contains hooks, commands, and local config
+.claude/
